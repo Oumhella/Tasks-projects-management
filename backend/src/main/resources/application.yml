@@ -1,0 +1,14 @@
+#spring.application.name=backend
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/projectmanager
+    username: postgres
+    password: root
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/project-manager
