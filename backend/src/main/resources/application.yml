@@ -7,8 +7,20 @@ spring:
     url: jdbc:postgresql://localhost:5432/projectmanager
     username: postgres
     password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/project-manager
+#          issuer-uri: http://localhost:8080/realms/project-manager
+          jwk-set-uri: http://localhost:8080/realms/project-manager/protocol/openid-connect/certs
+
+
+keycloak:
+  auth-server-url: http://localhost:8080
+  realm: project-manager
+  client_id: project-manager-backend
+  username: admin
+  password: admin
