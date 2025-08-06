@@ -3,6 +3,7 @@ package com.project_manager.service;
 import com.project_manager.entity.Project;
 import com.project_manager.repository.ProjectDAO.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,17 +20,18 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectServiceImpl(ProjectRepository projectRepository) {
         this.projectRepository = projectRepository;
     }
-
+    @PreAuthorize("isAuthenticated()")
     @Override
     public List<Project> findAllProjects() {
         return projectRepository.findAll();
     }
-
+    @PreAuthorize("isAuthenticated()")
     @Override
     public Optional<Project> findProjectById(UUID id) {
         return projectRepository.findById(id);
     }
 
+    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     public Project saveProject(Project project) {
         if (project.getCreatedAt() == null) {
@@ -39,6 +41,7 @@ public class ProjectServiceImpl implements ProjectService {
         return projectRepository.save(project);
     }
 
+    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     public Project updateProject(UUID id, Project projectDetails) {
         Optional<Project> projectOptional = projectRepository.findById(id);
@@ -51,7 +54,7 @@ public class ProjectServiceImpl implements ProjectService {
             project.setStatus(projectDetails.getStatus());
             project.setColor(projectDetails.getColor());
             project.setIcon(projectDetails.getIcon());
-            project.setUpdatedAt(LocalDateTime.now()); // Business logic to update timestamp
+            project.setUpdatedAt(LocalDateTime.now());
             return projectRepository.save(project);
         } else {
 
@@ -59,6 +62,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
+    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     public void deleteProject(UUID id) {
         projectRepository.deleteById(id);

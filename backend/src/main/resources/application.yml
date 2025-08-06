@@ -3,6 +3,12 @@ server:
   port: 8081
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/project-manager
+#          jwk-set-uri: http://localhost:8080/realms/project-manager/protocol/openid-connect/certs
   datasource:
     url: jdbc:postgresql://localhost:5432/projectmanager
     username: postgres
@@ -10,17 +16,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-#          issuer-uri: http://localhost:8080/realms/project-manager
-          jwk-set-uri: http://localhost:8080/realms/project-manager/protocol/openid-connect/certs
-
 
 keycloak:
   auth-server-url: http://localhost:8080
   realm: project-manager
-  client_id: project-manager-backend
+  client_id: project-manager-client
   username: admin
   password: admin
