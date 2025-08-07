@@ -7,7 +7,7 @@ const createKeycloakInstance = () => {
         keycloakInstance = new (Keycloak as any)({
             url: 'http://localhost:8080',
             realm: 'project-manager',
-            clientId: 'project-manager-frontend',
+            clientId: 'project-manager-client',
         });
     }
     return keycloakInstance;
