@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @EntityListeners(CommentActivityListener.class)
@@ -29,6 +31,8 @@ public class Comment {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Attachment> attachments = new HashSet<>();
 
     private LocalDateTime createdAt;
 

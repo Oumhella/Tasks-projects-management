@@ -5,17 +5,21 @@ import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.model.task.TaskType;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+
 @EntityListeners(TaskActivityListener.class)
-//@Setter
-//@Getter
+
 @Entity
 @Table(name = "tasks")
+@Setter
+@Getter
 @Data
 public class Task {
     @Id
@@ -72,8 +76,6 @@ public class Task {
         this.project = project;
     }
     public Task() {}
-
-
 
     public UUID getId() {
         return id;

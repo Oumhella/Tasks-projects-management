@@ -27,24 +27,22 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<Task> getAllTasks() {
+    public List<TaskRequest> getAllTasks() {
        return taskService.getTasks();
     }
 
-    @GetMapping("/{id}")
-    public Optional<Task> getTaskById(@PathVariable UUID id) {
-        return taskService.getTask(id);
+    @GetMapping("/id/{id}")
+    public Optional<TaskRequest> getTaskById(@PathVariable UUID id) {
+        return taskService.getTaskAsDto(id);
     }
 
-    @GetMapping("/{status}")
-    public List<Task> getTaskByStatus(@PathVariable TaskStatus status) {
+    @GetMapping("/status/{status}")
+    public List<TaskRequest> getTaskByStatus(@PathVariable TaskStatus status) {
         return taskService.getTasksByStatus(status);
     }
 
     @PostMapping
     public Task createTask(@RequestBody TaskRequest request) {
-        Task newTask = new Task(request.title,request.description,request.priority,request.status,request.type,projectService.findProjectById(request.project_id).orElseThrow());
-
-        return taskService.addTask(newTask);
+        return taskService.addTask(request);
     }
 }
