@@ -1,6 +1,6 @@
 package com.projectmanager.controller;
 
-import com.projectmanager.dto.TaskRequest;
+import com.projectmanager.dto.request.TaskRequest;
 import com.projectmanager.entity.Task;
 import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.service.project.ProjectService;

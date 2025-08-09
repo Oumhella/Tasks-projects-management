@@ -1,6 +1,7 @@
 package com.projectmanager.controller;
 
-import com.projectmanager.dto.UserRequest;
+import com.projectmanager.dto.request.UserRequest;
+import com.projectmanager.dto.response.UserResponse;
 import com.projectmanager.entity.User;
 import com.projectmanager.service.user.UserService;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +35,8 @@ public class UserController {
 
     @PostMapping
     public User createUser(@RequestBody UserRequest request) {
-        User user = new User(request.username, request.email, request.role);
-        return userService.createUser(user, request.password);
+        User user = new User(request.getUsername(), request.getEmail(), request.getRole());
+        return userService.createUser(user, request.getPassword());
     }
 
 

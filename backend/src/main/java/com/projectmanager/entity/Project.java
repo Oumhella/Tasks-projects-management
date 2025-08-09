@@ -14,7 +14,6 @@ import java.util.UUID;
 
 @Setter
 @Getter
-@Builder
 @Entity
 @Table(name = "projects")
 @Data

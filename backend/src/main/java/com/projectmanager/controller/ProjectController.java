@@ -2,7 +2,7 @@ package com.projectmanager.controller;
 
 
 
-import com.projectmanager.dto.ProjectRequest;
+import com.projectmanager.dto.response.ProjectResponse;
 import com.projectmanager.entity.Project;
 import com.projectmanager.entity.User;
 import com.projectmanager.service.project.ProjectService;
@@ -55,7 +55,7 @@ public class ProjectController {
 //    }
 
     @PostMapping
-    public ResponseEntity<Project> createProject(@RequestBody ProjectRequest request, Principal principal) {
+    public ResponseEntity<Project> createProject(@RequestBody ProjectResponse request, Principal principal) {
         // 1. Get the authenticated user ID (the creator) from the security context
 
         UUID idd = UUID.fromString("b4c9cb10-26f5-4dbc-ad43-637d81ce8cc1");
@@ -65,15 +65,12 @@ public class ProjectController {
                 .orElseThrow(() -> new EntityNotFoundException("Creator not found"));
 
         // 2. Fetch the member User objects from the provided UUIDs
-        Set<User> members = request.members.stream()
+        Set<User> members = request.getMembers().stream()
                 .map(id -> userService.getUserById(id).orElseThrow(() -> new EntityNotFoundException("Member not found with ID: " + id)))
                 .collect(Collectors.toSet());
-       Project project = new Project(request.name, request.description, request.startDate, request.endDate, request.status, request.color, request.icon, createdBy, members, LocalDateTime.now(),LocalDateTime.now());
+       Project project = new Project(request.getName(), request.getDescription(), request.getStartDate(), request.getEndDate(), request.getStatus(), request.getColor(), request.getIcon(), createdBy, members, LocalDateTime.now(),LocalDateTime.now());
 
 
-
-
-        // 4. Save and return the created project
         Project savedProject = projectService.saveProject(project);
         return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
     }

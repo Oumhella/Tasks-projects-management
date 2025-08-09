@@ -1,7 +1,7 @@
 package com.projectmanager.service.task;
 
 
-import com.projectmanager.dto.TaskRequest;
+import com.projectmanager.dto.request.TaskRequest;
 import com.projectmanager.entity.Task;
 import com.projectmanager.model.task.TaskStatus;
 

@@ -1,6 +1,6 @@
 package com.projectmanager.controller;
 
-import com.projectmanager.dto.CommentRequest;
+import com.projectmanager.dto.response.CommentResponse;
 import com.projectmanager.entity.Comment;
 import com.projectmanager.service.comment.CommentService;
 import com.projectmanager.service.task.TaskService;
@@ -38,7 +38,7 @@ public class CommentController {
     }
 
     @PostMapping
-    public Comment createComment(@RequestBody CommentRequest request) {
+    public Comment createComment(@RequestBody CommentResponse request) {
 
 
         Comment comment = new Comment(request.getContent(), taskService.getTask(request.getTaskId()).orElseThrow(), userService.getUserById(request.getUserId()).orElseThrow(), LocalDateTime.now(),LocalDateTime.now());

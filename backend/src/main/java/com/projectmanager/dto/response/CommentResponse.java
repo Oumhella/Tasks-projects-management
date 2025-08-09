@@ -1,15 +1,24 @@
-package com.projectmanager.dto;
+package com.projectmanager.dto.response;
 
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
-public class CommentRequest {
+public class CommentResponse {
 
+    private UUID id;
     private String content;
     private UUID taskId;
     private UUID userId;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
     public String getContent() {
         return content;

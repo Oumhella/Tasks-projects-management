@@ -1,6 +1,6 @@
 package com.projectmanager.service.task;
 
-import com.projectmanager.dto.TaskRequest;
+import com.projectmanager.dto.request.TaskRequest;
 import com.projectmanager.entity.Task;
 import com.projectmanager.mapper.TaskMapper;
 import com.projectmanager.model.task.TaskStatus;
@@ -66,7 +66,7 @@ public class TaskServiceImpl implements TaskService {
 @PreAuthorize("hasAnyRole('admin','project-manager')")
 @Override
     public Task addTask(TaskRequest request) {
-    if (request == null || request.project_id == null) {
+    if (request == null || request.getProject_id() == null) {
         throw new IllegalArgumentException("Invalid task request");
     }
     Task newTask = taskMapper.toEntity(request);
@@ -74,8 +74,8 @@ public class TaskServiceImpl implements TaskService {
     newTask.setCreatedAt(LocalDateTime.now());
     newTask.setStatus(TaskStatus.TODO);
     newTask.setUpdatedAt(LocalDateTime.now());
-    newTask.setProject(projectService.findProjectById(request.project_id)
-            .orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + request.project_id)));
+    newTask.setProject(projectService.findProjectById(request.getProject_id())
+            .orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + request.getProject_id())));
 
         return taskRepository.save(newTask);
     }

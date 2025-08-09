@@ -1,9 +1,8 @@
 package com.projectmanager.mapper;
 
-import com.projectmanager.dto.TaskRequest;
+import com.projectmanager.dto.request.TaskRequest;
 import com.projectmanager.entity.Task;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
