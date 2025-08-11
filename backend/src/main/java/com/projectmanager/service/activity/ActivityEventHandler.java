@@ -1,5 +1,6 @@
 package com.projectmanager.service.activity;
 
+import com.projectmanager.dto.response.ProjectResponse;
 import com.projectmanager.entity.Activity;
 import com.projectmanager.entity.Comment;
 import com.projectmanager.entity.Project;
@@ -10,6 +11,7 @@ import com.projectmanager.service.project.ProjectService;
 import com.projectmanager.service.task.TaskService;
 import com.projectmanager.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
@@ -25,7 +27,6 @@ public class ActivityEventHandler {
     private final UserService userService;
     private final TaskService taskService;
 
-    // Standard constructor injection
     public ActivityEventHandler(ActivityService activityService, ProjectService projectService, UserService userService, TaskService taskService) {
         this.activityService = activityService;
         this.projectService = projectService;

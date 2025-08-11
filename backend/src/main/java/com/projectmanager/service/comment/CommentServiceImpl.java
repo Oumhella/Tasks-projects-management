@@ -1,56 +1,104 @@
 package com.projectmanager.service.comment;
 
+import com.projectmanager.dto.request.CommentRequest;
+import com.projectmanager.dto.response.CommentResponse;
 import com.projectmanager.entity.Comment;
+import com.projectmanager.entity.Task;
+import com.projectmanager.entity.User;
+import com.projectmanager.mapper.CommentMapper;
 import com.projectmanager.repository.CommentRepository;
+import com.projectmanager.service.task.TaskService;
+import com.projectmanager.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentServiceImpl implements CommentService{
 
     private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
+    private final TaskService taskService;
+    private final UserService userService;
 
     @Autowired
-    public CommentServiceImpl(CommentRepository commentRepository) {
+    public CommentServiceImpl(CommentRepository commentRepository, CommentMapper commentMapper, TaskService taskService, UserService userService) {
         this.commentRepository = commentRepository;
+        this.commentMapper = commentMapper;
+        this.taskService = taskService;
+        this.userService = userService;
     }
 
+    @Override
+    public List<CommentResponse> getCommentsForTask(UUID taskId) {
+        return commentRepository.findByTaskId(taskId).stream()
+                .map(commentMapper::toResponse)
+                .collect(Collectors.toList());
+    }
     @Override
     public Optional<Comment> getCommentById(UUID id) {
         return commentRepository.findById(id);
     }
 
     @Override
-    public List<Comment> getComments() {
-        return commentRepository.findAll();
+    public List<CommentResponse> getComments() {
+        return commentRepository.findAll().stream().map(commentMapper::toResponse).collect(Collectors.toList());
     }
 
     @Override
     public void deleteCommentById(UUID id) {
+        if(!commentRepository.existsById(id)) {
+            throw new EntityNotFoundException("Comment not found");
+        }
         commentRepository.deleteById(id);
     }
 
     @Override
-    public Comment createComment(Comment comment) {
-        if(comment.getId() != null) {
-            throw new IllegalArgumentException("Id non valid");
+    public CommentResponse createComment(CommentRequest request, String userId) {
+        Comment comment = commentMapper.toEntity(request);
+
+        UUID user_Id = UUID.fromString(userId);
+        User creator = userService.getUserById(user_Id).orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_Id));
+        comment.setUser(creator);
+
+        // Fetch and set parent entities
+        if (request.getTaskId() != null) {
+            Task task = taskService.getTask(request.getTaskId())
+                    .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + request.getTaskId()));
+            comment.setTask(task);
         }
-       return commentRepository.save(comment);
+        if (request.getUserId() != null) {
+            User user = userService.getUserById(request.getUserId())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + request.getUserId()));
+            comment.setUser(user);
+        }
+
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setUpdatedAt(LocalDateTime.now());
+        Comment savedComment = commentRepository.save(comment);
+
+        return commentMapper.toResponse(savedComment);
     }
+
 
     @Override
-    public Comment editComment(UUID id, Comment editedComment) {
-       Comment existingComment = commentRepository.findById(id).orElseThrow(()->new EntityNotFoundException("Comment not found"));
+    @Transactional
+    public CommentResponse updateComment(UUID id, CommentRequest request) {
+        Comment existingComment = commentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + id));
 
-       existingComment.setContent(editedComment.getContent());
+        commentMapper.updateEntityFromRequest(request, existingComment);
+        existingComment.setUpdatedAt(LocalDateTime.now());
 
-        return commentRepository.save(existingComment);
+        Comment updatedComment = commentRepository.save(existingComment);
+        return commentMapper.toResponse(updatedComment);
     }
-
 
 }

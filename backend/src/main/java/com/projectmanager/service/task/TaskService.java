@@ -2,6 +2,7 @@ package com.projectmanager.service.task;
 
 
 import com.projectmanager.dto.request.TaskRequest;
+import com.projectmanager.dto.response.TaskResponse;
 import com.projectmanager.entity.Task;
 import com.projectmanager.model.task.TaskStatus;
 
@@ -11,11 +12,10 @@ import java.util.UUID;
 
 public interface TaskService {
 
-    List<TaskRequest> getTasks();
+    List<TaskResponse> getTasks();
     Optional<Task> getTask(UUID id);
-    Optional<TaskRequest> getTaskAsDto(UUID id);
-    List<TaskRequest> getTasksByStatus(TaskStatus status);
-    Task addTask(TaskRequest task);
-    Task updateTask(UUID id,Task task);
+    List<TaskResponse> getTasksByStatus(TaskStatus status);
+    TaskResponse addTask(TaskRequest task);
+    TaskResponse updateTask(UUID id,TaskRequest request);
     void deleteTask(UUID id);
 }

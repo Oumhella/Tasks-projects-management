@@ -12,9 +12,16 @@ import com.projectmanager.service.task.TaskService;
 import com.projectmanager.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.projectmanager.mapper.AttachmentMapper;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,38 +34,38 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final AttachmentRepository attachmentRepository;
     private final AttachmentMapper attachmentMapper;
     private final TaskService taskService;
-    private final CommentService commentService;
     private final UserService userService;
+    private final CommentService commentService;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @Autowired
-    public AttachmentServiceImpl(AttachmentRepository attachmentRepository, AttachmentMapper attachmentMapper, TaskService taskService, CommentService commentService, UserService userService) {
+    public AttachmentServiceImpl(AttachmentRepository attachmentRepository, AttachmentMapper attachmentMapper, TaskService taskService, UserService userService, CommentService commentService) {
         this.attachmentRepository = attachmentRepository;
         this.attachmentMapper = attachmentMapper;
         this.taskService = taskService;
-        this.commentService = commentService;
         this.userService = userService;
+        this.commentService = commentService;
     }
 
-
-    @Override
-    public Optional<AttachmentResponse> findAttachmentById(UUID id) {
-        return attachmentRepository.findById(id).map(attachmentMapper::toResponse);
-    }
-
-    @Override
-    public List<AttachmentResponse> findAllAttachments() {
-        return attachmentRepository.findAll().stream().map(attachmentMapper::toResponse).collect(Collectors.toList());
-    }
-
-    @Override
-    public AttachmentResponse createAttachment(AttachmentRequest request) {
-        if (request.getTaskId() == null && request.getCommentId() == null) {
-            throw new IllegalArgumentException("Attachment must be linked to a Task or a Comment.");
+    @Transactional
+    public AttachmentResponse uploadAttachment(AttachmentRequest request) throws IOException {
+        MultipartFile file = request.getFile();
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Cannot upload an empty file.");
         }
 
-        Attachment attachment = attachmentMapper.toEntity(request);
+        String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path filePath = Paths.get(uploadDir, uniqueFileName);
+        Files.copy(file.getInputStream(), filePath);
 
-        // Fetch and set parent entities
+        Attachment attachment = new Attachment();
+        attachment.setFileName(file.getOriginalFilename());
+        attachment.setFilePath(filePath.toString());
+        attachment.setFileSize(file.getSize());
+        attachment.setUploadedAt(LocalDateTime.now());
+
         if (request.getTaskId() != null) {
             Task task = taskService.getTask(request.getTaskId())
                     .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + request.getTaskId()));
@@ -69,22 +76,41 @@ public class AttachmentServiceImpl implements AttachmentService {
                     .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + request.getCommentId()));
             attachment.setComment(comment);
         }
-
-        // Fetch and set the user who uploaded the attachment
         if (request.getUploadedByUserId() != null) {
             User user = userService.getUserById(request.getUploadedByUserId())
                     .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + request.getUploadedByUserId()));
             attachment.setUploadedBy(user);
         }
 
-        attachment.setUploadedAt(LocalDateTime.now());
         Attachment savedAttachment = attachmentRepository.save(attachment);
-
         return attachmentMapper.toResponse(savedAttachment);
     }
 
-    @Override
-    public void deleteAttachmentById(UUID id) {
+    public List<AttachmentResponse> getAttachmentsForTask(UUID taskId) {
+        List<Attachment> attachments = attachmentRepository.findByTaskId(taskId);
+        return attachmentMapper.toResponseList(attachments);
+    }
 
+    public List<AttachmentResponse> getAttachmentsForComment(UUID commentId) {
+        List<Attachment> attachments = attachmentRepository.findByCommentId(commentId);
+        return attachmentMapper.toResponseList(attachments);
+    }
+
+    public Optional<Attachment> getAttachmentById(UUID id) {
+        return attachmentRepository.findById(id);
+    }
+
+    @Transactional
+    public void deleteAttachment(UUID id) {
+        Attachment attachment = attachmentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found with ID: " + id));
+
+        try {
+            Files.deleteIfExists(Paths.get(attachment.getFilePath()));
+        } catch (IOException e) {
+            System.err.println("Failed to delete file from disk: " + attachment.getFilePath());
+        }
+
+        attachmentRepository.deleteById(id);
     }
 }

@@ -4,6 +4,7 @@ import com.projectmanager.entity.User;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface UserService {
@@ -12,4 +13,5 @@ public interface UserService {
     Optional<User> getUserById(UUID id);
     User updateUser(UUID id, User userDetails);
     void deleteUser(UUID id);
+    List<User> getUsersByIds(Set<UUID> userIds);
 }

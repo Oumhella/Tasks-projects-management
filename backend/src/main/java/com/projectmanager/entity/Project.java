@@ -75,7 +75,6 @@ public class Project {
     this.createdAt = now;
     this.updatedAt = now1;
 
-
     }
 
 

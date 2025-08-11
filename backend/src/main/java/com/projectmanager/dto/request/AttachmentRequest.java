@@ -1,37 +1,21 @@
 package com.projectmanager.dto.request;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.UUID;
 
 public class AttachmentRequest {
-    private String fileName;
-    private String filePath;
-    private Long fileSize;
+    private MultipartFile file;
     private UUID taskId;
     private UUID commentId;
     private UUID uploadedByUserId;
 
-    public String getFileName() {
-        return fileName;
+    public MultipartFile getFile() {
+        return file;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
-
-    public Long getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(Long fileSize) {
-        this.fileSize = fileSize;
+    public void setFile(MultipartFile file) {
+        this.file = file;
     }
 
     public UUID getTaskId() {

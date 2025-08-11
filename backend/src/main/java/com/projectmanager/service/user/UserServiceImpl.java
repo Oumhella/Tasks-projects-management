@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -52,7 +53,9 @@ public class UserServiceImpl implements UserService {
         user.setRole(userDetails.getRole());
         return userRepository.save(user);
     }
-
+    public List<User> getUsersByIds(Set<UUID> userIds) {
+        return userRepository.findAllById(userIds);
+    }
     @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     public void deleteUser(UUID id) {

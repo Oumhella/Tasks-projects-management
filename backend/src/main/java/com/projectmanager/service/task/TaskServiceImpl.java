@@ -1,15 +1,20 @@
 package com.projectmanager.service.task;
 
 import com.projectmanager.dto.request.TaskRequest;
+import com.projectmanager.dto.response.TaskResponse;
+import com.projectmanager.entity.Project;
 import com.projectmanager.entity.Task;
+import com.projectmanager.entity.User;
 import com.projectmanager.mapper.TaskMapper;
 import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.repository.TaskRepository;
 import com.projectmanager.service.project.ProjectService;
+import com.projectmanager.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,51 +27,42 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
+    private final UserService userService;
     private final ProjectService projectService;
-
     @Autowired
-    public TaskServiceImpl(TaskRepository taskRepository, TaskMapper taskMapper, ProjectService projectService) {
+    public TaskServiceImpl(TaskRepository taskRepository, TaskMapper taskMapper, ProjectService projectService, UserService userService) {
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
         this.projectService = projectService;
+        this.userService = userService;
     }
 
     @PreAuthorize("hasRole('admin_ROLE')")
     @Override
-    public List<TaskRequest> getTasks(){
-        return taskRepository.findAll().stream().map(taskMapper::toDto).collect(Collectors.toList());
+    public List<TaskResponse> getTasks(){
+        return taskRepository.findAll().stream().map(taskMapper::toResponse).collect(Collectors.toList());
     }
 
 
-    @PreAuthorize("permitAll()")
-    @Override
-    public Optional<TaskRequest> getTaskAsDto(UUID id) {
-        return taskRepository.findById(id).map(taskMapper::toDto);
-    }
 
 
     @PreAuthorize("permitAll()")
     @Override
     public Optional<Task> getTask(UUID id) {
-        return taskRepository.findById(id);
+       return taskRepository.findById(id);
     }
-//    @PreAuthorize("isAuthenticated()")
-//    @Override
-//    public List<Task> getTasksByManager(UUID id) {
-//        return taskRepository.findByManager(id);
-//    }
 
     @PreAuthorize("isAuthenticated()")
     @Override
-    public List<TaskRequest> getTasksByStatus(TaskStatus status) {
-        return taskRepository.findByStatus(status).stream().map(taskMapper::toDto).collect(Collectors.toList());
+    public List<TaskResponse> getTasksByStatus(TaskStatus status) {
+        return taskRepository.findByStatus(status).stream().map(taskMapper::toResponse).collect(Collectors.toList());
     }
 
 //    @PreAuthorize("hasAnyRole('admin','project-manager')")
 @PreAuthorize("hasAnyRole('admin','project-manager')")
 @Override
-    public Task addTask(TaskRequest request) {
-    if (request == null || request.getProject_id() == null) {
+    public TaskResponse addTask(TaskRequest request) {
+    if (request == null || request.getProjectId() == null) {
         throw new IllegalArgumentException("Invalid task request");
     }
     Task newTask = taskMapper.toEntity(request);
@@ -74,22 +70,41 @@ public class TaskServiceImpl implements TaskService {
     newTask.setCreatedAt(LocalDateTime.now());
     newTask.setStatus(TaskStatus.TODO);
     newTask.setUpdatedAt(LocalDateTime.now());
-    newTask.setProject(projectService.findProjectById(request.getProject_id())
-            .orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + request.getProject_id())));
+    newTask.setProject(projectService.findProjectById(request.getProjectId())
+            .orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + request.getProjectId())));
 
-        return taskRepository.save(newTask);
+    Task createdTask = taskRepository.save(newTask);
+
+        return taskMapper.toResponse(createdTask);
     }
 
     @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
-    public Task updateTask(UUID id, Task updatedTask) {
-        Task existingtask = taskRepository.findById(id).orElseThrow(()->new EntityNotFoundException("Task not found"));
+    @Transactional
+    public TaskResponse updateTask(UUID id, TaskRequest request) {
+        Task existingTask = taskRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + id));
 
-        existingtask.setDescription(updatedTask.getDescription());
-        existingtask.setStatus(updatedTask.getStatus());
 
-        return taskRepository.save(existingtask);
+        taskMapper.updateTaskFromDto(request, existingTask);
 
+        if (request.getAssignedToUserId() != null) {
+            User assignedTo = userService.getUserById(request.getAssignedToUserId())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + request.getAssignedToUserId()));
+            existingTask.setAssignedTo(assignedTo);
+        }
+
+        if (request.getProjectId() != null) {
+            Project project = projectService.findProjectById(request.getProjectId())
+                    .orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + request.getProjectId()));
+            existingTask.setProject(project);
+        }
+
+        existingTask.setUpdatedAt(LocalDateTime.now());
+
+        Task savedTask = taskRepository.save(existingTask);
+
+        return taskMapper.toResponse(savedTask);
     }
 
     @PreAuthorize("hasAnyRole('admin','project-manager')")

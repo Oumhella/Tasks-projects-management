@@ -1,12 +1,12 @@
-package com.projectmanager.dto.response;
+package com.projectmanager.dto.request;
 
 import com.projectmanager.model.project.ProjectStatus;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-public class ProjectResponse {
-    private UUID id;
+public class ProjectRequest {
     private String name;
     private String description;
     private LocalDateTime startDate;
@@ -16,16 +16,6 @@ public class ProjectResponse {
     private String icon;
     private UUID createdByUserId;
     private Set<UUID> memberIds;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
@@ -97,21 +87,5 @@ public class ProjectResponse {
 
     public void setMemberIds(Set<UUID> memberIds) {
         this.memberIds = memberIds;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

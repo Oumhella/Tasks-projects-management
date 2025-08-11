@@ -1,5 +1,7 @@
 package com.projectmanager.service.project;
 
+import com.projectmanager.dto.request.ProjectRequest;
+import com.projectmanager.dto.response.ProjectResponse;
 import com.projectmanager.entity.Project;
 
 import java.util.List;
@@ -10,16 +12,16 @@ import java.util.UUID;
 public interface ProjectService {
 
 
-    List<Project> findAllProjects();
+    List<ProjectResponse> findAllProjects();
+
 
     Optional<Project> findProjectById(UUID id);
 
-    Project saveProject(Project project);
+    ProjectResponse createProject(ProjectRequest request, String createdByUserIdString);
 
-    Project updateProject(UUID id, Project projectDetails);
+    ProjectResponse updateProject(UUID id, ProjectRequest request);
 
     void deleteProject(UUID id);
 
-    // You can add more business-logic-specific methods here
-    // e.g., List<Project> findProjectsByStatus(String status);
+
 }

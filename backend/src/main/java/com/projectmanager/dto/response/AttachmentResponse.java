@@ -6,7 +6,6 @@ import java.util.UUID;
 public class AttachmentResponse {
     private UUID id;
     private String fileName;
-    private String filePath;
     private Long fileSize;
     private UUID taskId;
     private UUID commentId;
@@ -27,14 +26,6 @@ public class AttachmentResponse {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
     }
 
     public Long getFileSize() {

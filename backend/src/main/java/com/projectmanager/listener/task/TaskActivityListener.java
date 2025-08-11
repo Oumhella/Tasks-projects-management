@@ -20,19 +20,14 @@ public class TaskActivityListener {
 
     @PostUpdate
     public void onPostUpdate(Task task) {
-        // Logique pour déterminer les changements et créer un enregistrement d'activité
-        // Par exemple, si le statut a changé
-        // Note: L'accès à l'état précédent nécessite une approche plus avancée (comme @PreUpdate)
 
-        // Simuler un enregistrement d'activité
         Activity activity = new Activity();
         activity.setAction("Task Updated");
         activity.setDetails("Task '" + task.getTitle() + "' was updated.");
         activity.setTask(task);
         activity.setCreatedAt(LocalDateTime.now());
-        // L'utilisateur doit être récupéré du contexte de sécurité
 
-        // Sauvegarder l'activité via le service
+
         if (activityService != null) {
             activityService.createActivity(activity);
         }

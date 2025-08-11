@@ -1,13 +1,18 @@
 package com.projectmanager.controller;
 
+import com.projectmanager.dto.request.CommentRequest;
 import com.projectmanager.dto.response.CommentResponse;
 import com.projectmanager.entity.Comment;
+import com.projectmanager.mapper.CommentMapper;
 import com.projectmanager.service.comment.CommentService;
 import com.projectmanager.service.task.TaskService;
 import com.projectmanager.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -18,32 +23,54 @@ import java.util.UUID;
 public class CommentController {
 
     private final CommentService commentService;
-    private final TaskService taskService;
     private final UserService userService;
+    private final CommentMapper commentMapper;
 
     @Autowired
-    public CommentController(CommentService commentService, TaskService taskService, UserService userService) {
+    public CommentController(CommentService commentService, UserService userService, CommentMapper commentMapper) {
         this.commentService = commentService;
-        this.taskService = taskService;
         this.userService = userService;
+        this.commentMapper = commentMapper;
     }
-    @GetMapping("{id}")
-    public Optional<Comment> getCommentById(@PathVariable UUID id) {
 
-       return commentService.getCommentById(id);
+    @GetMapping("{id}")
+    public ResponseEntity<CommentResponse> getCommentById(@PathVariable UUID id) {
+    Optional<Comment> comment = commentService.getCommentById(id);
+    if (comment.isEmpty()) {
+        return ResponseEntity.notFound().build();
     }
+       CommentResponse commentResponse = commentMapper.toResponse(comment.get());
+        return ResponseEntity.ok(commentResponse);
+    }
+
     @GetMapping
-    public List<Comment> getAllComments() {
-        return commentService.getComments();
+    public ResponseEntity<List<CommentResponse>> getAllComments() {
+        List<CommentResponse> comments = commentService.getComments();
+        return ResponseEntity.ok(comments);
     }
 
     @PostMapping
-    public Comment createComment(@RequestBody CommentResponse request) {
+    public ResponseEntity<CommentResponse> createComment(@RequestBody CommentRequest request, Principal principal) {
+        String username = principal.getName();
+        CommentResponse createdComment = commentService.createComment(request, username);
+        return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
+    }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CommentResponse> updateComment(@PathVariable UUID id, @RequestBody CommentRequest request) {
+        CommentResponse updatedComment = commentService.updateComment(id, request);
+        return ResponseEntity.ok(updatedComment);
+    }
 
-        Comment comment = new Comment(request.getContent(), taskService.getTask(request.getTaskId()).orElseThrow(), userService.getUserById(request.getUserId()).orElseThrow(), LocalDateTime.now(),LocalDateTime.now());
-
-        return commentService.createComment(comment);
+    @GetMapping("/tasks/{id}")
+    public ResponseEntity<List<CommentResponse>> getCommentsByTaskId(@PathVariable UUID id) {
+        List<CommentResponse> taskComments = commentService.getCommentsForTask(id);
+        return ResponseEntity.ok(taskComments);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<CommentResponse> deleteComment(@PathVariable UUID id) {
+        commentService.deleteCommentById(id);
+        return ResponseEntity.noContent().build();
     }
 
 

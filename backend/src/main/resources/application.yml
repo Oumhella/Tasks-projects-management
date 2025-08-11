@@ -23,3 +23,6 @@ keycloak:
   client_id: project-manager-client
   username: admin
   password: admin
+
+file:
+  upload-dir: C:/uploads/attachments

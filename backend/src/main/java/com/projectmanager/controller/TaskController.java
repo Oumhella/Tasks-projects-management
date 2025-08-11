@@ -1,11 +1,16 @@
 package com.projectmanager.controller;
 
 import com.projectmanager.dto.request.TaskRequest;
+import com.projectmanager.dto.response.TaskResponse;
 import com.projectmanager.entity.Task;
+import com.projectmanager.mapper.TaskMapper;
 import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.service.project.ProjectService;
 import com.projectmanager.service.task.TaskService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,30 +24,54 @@ public class TaskController {
     private final TaskService taskService;
 
     private final ProjectService projectService;
+    private final TaskMapper taskMapper;
 
     @Autowired
-    public TaskController(TaskService taskService, ProjectService projectService) {
+    public TaskController(TaskService taskService, ProjectService projectService, TaskMapper taskMapper) {
         this.taskService = taskService;
         this.projectService = projectService;
+        this.taskMapper = taskMapper;
     }
 
     @GetMapping
-    public List<TaskRequest> getAllTasks() {
-       return taskService.getTasks();
+    public ResponseEntity<List<TaskResponse>> getAllTasks() {
+       List<TaskResponse> tasks = taskService.getTasks();
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/id/{id}")
-    public Optional<TaskRequest> getTaskById(@PathVariable UUID id) {
-        return taskService.getTaskAsDto(id);
+    public ResponseEntity<TaskResponse> getTaskById(@PathVariable UUID id) {
+        Optional<Task> task = taskService.getTask(id);
+        if(task.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+
+        TaskResponse taskResponse = taskMapper.toResponse(task.get());
+        return ResponseEntity.ok(taskResponse);
     }
 
     @GetMapping("/status/{status}")
-    public List<TaskRequest> getTaskByStatus(@PathVariable TaskStatus status) {
-        return taskService.getTasksByStatus(status);
+    public ResponseEntity<List<TaskResponse>> getTaskByStatus(@PathVariable TaskStatus status) {
+        List<TaskResponse> tasks = taskService.getTasksByStatus(status);
+        return ResponseEntity.ok(tasks);
     }
 
     @PostMapping
-    public Task createTask(@RequestBody TaskRequest request) {
-        return taskService.addTask(request);
+    public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest request) {
+        return new ResponseEntity<>((taskService.addTask(request)), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable UUID id, @RequestBody TaskRequest request) {
+        TaskResponse updatedTask = taskService.updateTask(id, request);
+        return ResponseEntity.ok(updatedTask);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<TaskResponse> deleteTask(@PathVariable UUID id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
     }
 }
+
+
