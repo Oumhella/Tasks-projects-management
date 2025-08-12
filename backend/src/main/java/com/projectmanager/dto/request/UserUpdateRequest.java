@@ -1,34 +1,11 @@
-package com.projectmanager.dto.response;
+package com.projectmanager.dto.request;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-public class UserResponse {
-    private UUID id;
-    private UUID keycloakId;
+public class UserUpdateRequest {
     private String username;
     private String email;
     private String firstName;
     private String lastName;
     private String role;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getKeycloakId() {
-        return keycloakId;
-    }
-
-    public void setKeycloakId(UUID keycloakId) {
-        this.keycloakId = keycloakId;
-    }
 
     public String getUsername() {
         return username;
@@ -68,21 +45,5 @@ public class UserResponse {
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

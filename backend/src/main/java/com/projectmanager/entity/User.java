@@ -10,11 +10,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Setter
-@Getter
 @Entity
 @Table(name = "users")
-@Data
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

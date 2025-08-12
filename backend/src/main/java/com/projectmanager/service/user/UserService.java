@@ -1,5 +1,8 @@
 package com.projectmanager.service.user;
 
+import com.projectmanager.dto.request.UserRequest;
+import com.projectmanager.dto.request.UserUpdateRequest;
+import com.projectmanager.dto.response.UserResponse;
 import com.projectmanager.entity.User;
 
 import java.util.List;
@@ -8,10 +11,10 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface UserService {
-    User createUser(User user, String rawPassword);
-    List<User> getAllUsers();
+    UserResponse createUser(UserRequest request);
+    List<UserResponse> getAllUsers();
     Optional<User> getUserById(UUID id);
-    User updateUser(UUID id, User userDetails);
+    UserResponse updateUser(UUID id, UserUpdateRequest updateRequest);
     void deleteUser(UUID id);
     List<User> getUsersByIds(Set<UUID> userIds);
 }

@@ -15,6 +15,7 @@ public interface AttachmentService {
     List<AttachmentResponse> getAttachmentsForTask(UUID taskId);
     List<AttachmentResponse> getAttachmentsForComment(UUID commentId);
     Optional<Attachment> getAttachmentById(UUID id);
-    void deleteAttachment(UUID id);
+    void deleteAttachment(UUID id) throws IOException;
+    String getPresignedDownloadUrl(UUID attachmentId) throws IOException;
 }
 

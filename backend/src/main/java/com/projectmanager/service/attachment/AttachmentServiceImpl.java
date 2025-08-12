@@ -8,6 +8,7 @@ import com.projectmanager.entity.Task;
 import com.projectmanager.entity.User;
 import com.projectmanager.repository.AttachmentRepository;
 import com.projectmanager.service.comment.CommentService;
+import com.projectmanager.service.minio.MinioService;
 import com.projectmanager.service.task.TaskService;
 import com.projectmanager.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,17 +37,17 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final TaskService taskService;
     private final UserService userService;
     private final CommentService commentService;
+    private final MinioService minioService;
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
 
     @Autowired
-    public AttachmentServiceImpl(AttachmentRepository attachmentRepository, AttachmentMapper attachmentMapper, TaskService taskService, UserService userService, CommentService commentService) {
+    public AttachmentServiceImpl(AttachmentRepository attachmentRepository, AttachmentMapper attachmentMapper, MinioService minioService , TaskService taskService, UserService userService, CommentService commentService) {
         this.attachmentRepository = attachmentRepository;
         this.attachmentMapper = attachmentMapper;
         this.taskService = taskService;
         this.userService = userService;
         this.commentService = commentService;
+        this.minioService = minioService;
     }
 
     @Transactional
@@ -56,13 +57,13 @@ public class AttachmentServiceImpl implements AttachmentService {
             throw new IllegalArgumentException("Cannot upload an empty file.");
         }
 
-        String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir, uniqueFileName);
-        Files.copy(file.getInputStream(), filePath);
+        String objectName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+
+        minioService.uploadFile(objectName, file.getInputStream(), file.getContentType());
 
         Attachment attachment = new Attachment();
         attachment.setFileName(file.getOriginalFilename());
-        attachment.setFilePath(filePath.toString());
+        attachment.setFilePath(objectName);
         attachment.setFileSize(file.getSize());
         attachment.setUploadedAt(LocalDateTime.now());
 
@@ -101,16 +102,19 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Transactional
-    public void deleteAttachment(UUID id) {
+    public void deleteAttachment(UUID id) throws IOException {
         Attachment attachment = attachmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Attachment not found with ID: " + id));
 
-        try {
-            Files.deleteIfExists(Paths.get(attachment.getFilePath()));
-        } catch (IOException e) {
-            System.err.println("Failed to delete file from disk: " + attachment.getFilePath());
-        }
-
+        minioService.deleteFile(attachment.getFilePath());
         attachmentRepository.deleteById(id);
+    }
+
+    @Override
+    public String getPresignedDownloadUrl(UUID attachmentId) throws IOException {
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found with ID: " + attachmentId));
+
+        return minioService.getPresignedUrl(attachment.getFilePath());
     }
 }

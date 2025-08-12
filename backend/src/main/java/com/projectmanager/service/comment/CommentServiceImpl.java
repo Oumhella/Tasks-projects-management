@@ -61,24 +61,25 @@ public class CommentServiceImpl implements CommentService{
     }
 
     @Override
+    @Transactional
     public CommentResponse createComment(CommentRequest request, String userId) {
         Comment comment = commentMapper.toEntity(request);
 
+        // 1. Fetch the user once from the authenticated userId
         UUID user_Id = UUID.fromString(userId);
-        User creator = userService.getUserById(user_Id).orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_Id));
-        comment.setUser(creator);
+        User user = userService.getUserById(user_Id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_Id));
+        comment.setUser(user);
 
-        // Fetch and set parent entities
-        if (request.getTaskId() != null) {
-            Task task = taskService.getTask(request.getTaskId())
-                    .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + request.getTaskId()));
-            comment.setTask(task);
+        // 2. Fetch and set the Task entity
+        if (request.getTaskId() == null) {
+            throw new IllegalArgumentException("Task ID cannot be null");
         }
-        if (request.getUserId() != null) {
-            User user = userService.getUserById(request.getUserId())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + request.getUserId()));
-            comment.setUser(user);
-        }
+        Task task = taskService.getTask(request.getTaskId())
+                .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + request.getTaskId()));
+        comment.setTask(task);
+
+        // The content is already mapped by the mapper
 
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());

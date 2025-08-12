@@ -7,6 +7,7 @@ import com.projectmanager.entity.Project;
 import com.projectmanager.entity.Task;
 import com.projectmanager.entity.User;
 import com.projectmanager.event.CommentAddedEvent;
+import com.projectmanager.repository.CommentRepository;
 import com.projectmanager.service.project.ProjectService;
 import com.projectmanager.service.task.TaskService;
 import com.projectmanager.service.user.UserService;
@@ -26,18 +27,21 @@ public class ActivityEventHandler {
     private final ProjectService projectService;
     private final UserService userService;
     private final TaskService taskService;
+    private final CommentRepository commentRepository;
 
-    public ActivityEventHandler(ActivityService activityService, ProjectService projectService, UserService userService, TaskService taskService) {
+    public ActivityEventHandler(ActivityService activityService, CommentRepository commentRepository , ProjectService projectService, UserService userService, TaskService taskService) {
         this.activityService = activityService;
         this.projectService = projectService;
         this.userService = userService;
         this.taskService = taskService;
+        this.commentRepository = commentRepository;
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentAddedEvent(CommentAddedEvent event) {
-        Comment comment = event.getComment();
-
+//        Comment comment = event.getComment();
+        Comment comment = commentRepository.findById(event.getComment().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + event.getComment().getId()));
         Activity activity = new Activity();
         activity.setAction("comment added");
         activity.setDetails(comment.getUser().getUsername() + " has added a comment to " + comment.getTask().getTitle());

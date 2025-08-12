@@ -21,8 +21,16 @@ keycloak:
   auth-server-url: http://localhost:8080
   realm: project-manager
   client_id: project-manager-client
+  client-secret: zvWp7DOJzI2V5HEFOgKCGG0y4xkX6sDg
   username: admin
   password: admin
 
-file:
-  upload-dir: C:/uploads/attachments
+#file:
+#  upload-dir: C:/uploads/attachments
+  #MinIO
+
+minio:
+  url: http://127.0.0.1:9000
+  accessKey: biti
+  secretKey: bitibiti
+  bucketName: project-manager-attachments

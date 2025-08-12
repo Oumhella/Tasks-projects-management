@@ -15,7 +15,6 @@ public class CommentResponse {
     private UUID userId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Set<AttachmentResponse> attachments;
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -65,11 +64,5 @@ public class CommentResponse {
         this.userId = userId;
     }
 
-    public Set<AttachmentResponse> getAttachments() {
-        return attachments;
-    }
 
-    public void setAttachments(Set<AttachmentResponse> attachments) {
-        this.attachments = attachments;
-    }
 }
