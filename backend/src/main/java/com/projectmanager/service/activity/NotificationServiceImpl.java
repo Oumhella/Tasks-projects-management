@@ -16,6 +16,6 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendNotification(Set<User> recipients, Activity activity) {
 
-       log.info("notification send");
+       log.info("notification sent");
     }
 }
