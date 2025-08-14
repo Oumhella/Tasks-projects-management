@@ -43,7 +43,8 @@ public class ProjectServiceImpl implements ProjectService {
         return projectRepository.findById(id);
     }
 
-    @PreAuthorize("hasAnyRole('admin','project-manager')")
+//    @PreAuthorize("hasAnyRole('admin','project-manager')")
+    @Transactional
     @Override
     public ProjectResponse createProject(ProjectRequest request, String createdByUserIdString) {
         Project project = projectMapper.toEntity(request);
@@ -64,7 +65,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         return projectMapper.toResponse(savedProject);
     }
-    @PreAuthorize("hasAnyRole('admin','project-manager')")
+//    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     @Transactional
     public ProjectResponse updateProject(UUID id, ProjectRequest request) {
@@ -87,6 +88,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
+    @Transactional
     public void deleteProject(UUID id) {
         if (!projectRepository.existsById(id)) {
             throw new EntityNotFoundException("Project not found with ID: " + id);

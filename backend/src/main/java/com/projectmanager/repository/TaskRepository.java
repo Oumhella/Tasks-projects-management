@@ -5,6 +5,7 @@ import com.projectmanager.model.task.TaskPriority;
 import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.model.task.TaskType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,7 +18,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     List<Task> findByPriority(TaskPriority priority);
 
-
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.comments ORDER BY t.createdAt DESC")
+    List<Task> findAllWithComments();
     List<Task> findByType(TaskType type);
         
 

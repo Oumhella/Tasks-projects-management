@@ -12,11 +12,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Setter
-@Getter
 @Entity
 @Table(name = "projects")
-@Data
 public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

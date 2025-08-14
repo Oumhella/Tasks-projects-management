@@ -53,6 +53,7 @@ public class CommentServiceImpl implements CommentService{
     }
 
     @Override
+    @Transactional
     public void deleteCommentById(UUID id) {
         if(!commentRepository.existsById(id)) {
             throw new EntityNotFoundException("Comment not found");

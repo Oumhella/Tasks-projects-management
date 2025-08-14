@@ -1,146 +1,315 @@
-import React, { useState } from 'react';
-// The import statement is looking for a file at './User.css'.
-// This error means the file could not be found at that path.
-// To fix this, you must ensure the file 'User.css' exists in the same folder as 'UserCreationForm'.
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaSave, FaTimes, FaUser, FaEnvelope, FaKey, FaUserTag } from 'react-icons/fa';
 import './user.css';
 
-const UserCreationForm: React.FC = () => {
+interface UserFormData {
+    username: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+}
 
-
-
-    const [formData, setFormData] = useState({
+const User: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState<UserFormData>({
         username: '',
         email: '',
         password: '',
+        confirmPassword: '',
         firstName: '',
         lastName: '',
         role: 'developer'
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<Partial<UserFormData>>({});
+    const [isEditMode, setIsEditMode] = useState(false);
+
+    useEffect(() => {
+        if (id) {
+            setIsEditMode(true);
+            // TODO: Fetch user data for editing when backend is connected
+            // For now, using mock data
+            setFormData({
+                username: 'john.doe',
+                email: 'john.doe@example.com',
+                password: '',
+                confirmPassword: '',
+                firstName: 'John',
+                lastName: 'Doe',
+                role: 'developer'
+            });
+        }
+    }, [id]);
+
+    const validateForm = (): boolean => {
+        const newErrors: Partial<UserFormData> = {};
+
+        if (!formData.username.trim()) {
+            newErrors.username = 'Username is required';
+        }
+
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Email is invalid';
+        }
+
+        if (!isEditMode) {
+            if (!formData.password) {
+                newErrors.password = 'Password is required';
+            } else if (formData.password.length < 6) {
+                newErrors.password = 'Password must be at least 6 characters';
+            }
+
+            if (formData.password !== formData.confirmPassword) {
+                newErrors.confirmPassword = 'Passwords do not match';
+            }
+        }
+
+        if (!formData.firstName.trim()) {
+            newErrors.firstName = 'First name is required';
+        }
+
+        if (!formData.lastName.trim()) {
+            newErrors.lastName = 'Last name is required';
+        }
+
+        if (!formData.role) {
+            newErrors.role = 'Role is required';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: value,
+            [name]: value
         }));
-    };
 
-    const handleSubmit = async (e: { preventDefault: () => void; }) => {
-        e.preventDefault();
-
-        try {
-            const response = await fetch('http://localhost:8081/api/v1/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Ajoutez ici d'autres headers comme les tokens d'autorisation si nécessaire
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                console.log('Utilisateur créé avec succès :', result);
-                // Vous pouvez réinitialiser le formulaire ou rediriger l'utilisateur ici
-            } else {
-                const errorData = await response.json();
-                console.error('Échec de la création de l\'utilisateur :', errorData);
-            }
-        } catch (error) {
-            console.error('Erreur réseau ou du serveur :', error);
+        // Clear error when user starts typing
+        if (errors[name as keyof UserFormData]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: undefined
+            }));
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            // TODO: Replace with actual API call when backend is connected
+            console.log('User data to save:', formData);
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Redirect to user list
+            navigate('/users');
+        } catch (error) {
+            console.error('Error saving user:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const roleOptions = [
+        { value: 'admin', label: 'Administrator', description: 'Full system access' },
+        { value: 'project-manager', label: 'Project Manager', description: 'Manage projects and teams' },
+        { value: 'developer', label: 'Developer', description: 'Develop and maintain code' },
+        { value: 'designer', label: 'Designer', description: 'Create user interfaces and graphics' },
+        { value: 'tester', label: 'Tester', description: 'Test and quality assurance' },
+        { value: 'viewer', label: 'Viewer', description: 'Read-only access' }
+    ];
+
     return (
-        <div className="form-container">
-            <h2 className="form-title">Créer un nouvel utilisateur</h2>
-            <form onSubmit={handleSubmit} className="form-content">
-                <div className="input-group">
-                    <label htmlFor="username">Nom d'utilisateur</label>
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        placeholder="Nom d'utilisateur"
-                        required
-                        className="form-input"
-                    />
+        <div className="user-container">
+            <div className="user-card">
+                <div className="user-header">
+                    <h1 className="user-title">
+                        {isEditMode ? 'Edit User' : 'Create New User'}
+                    </h1>
+                    <p className="user-subtitle">
+                        {isEditMode ? 'Update user information' : 'Add a new user to the system'}
+                    </p>
                 </div>
-                <div className="input-group">
-                    <label htmlFor="email">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Email"
-                        required
-                        className="form-input"
-                    />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="password">Mot de passe</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Mot de passe"
-                        required
-                        className="form-input"
-                    />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="firstName">Prénom</label>
-                    <input
-                        type="text"
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        placeholder="Prénom"
-                        className="form-input"
-                    />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="lastName">Nom de famille</label>
-                    <input
-                        type="text"
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        placeholder="Nom de famille"
-                        className="form-input"
-                    />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="role">Rôle</label>
-                    <select
-                        id="role"
-                        name="role"
-                        value={formData.role}
-                        onChange={handleChange}
-                        className="form-input"
-                    >
-                        <option value="developer">Développeur</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Administrateur</option>
-                    </select>
-                </div>
-                <button
-                    type="submit"
-                    className="form-button"
-                >
-                    Créer l'utilisateur
-                </button>
-            </form>
+
+                <form onSubmit={handleSubmit} className="user-form">
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">
+                                <FaUser />
+                                Username *
+                            </label>
+                            <input
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleInputChange}
+                                className={`form-input ${errors.username ? 'error' : ''}`}
+                                placeholder="Enter username"
+                            />
+                            {errors.username && (
+                                <span className="error-message">{errors.username}</span>
+                            )}
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">
+                                <FaEnvelope />
+                                Email *
+                            </label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                className={`form-input ${errors.email ? 'error' : ''}`}
+                                placeholder="Enter email"
+                            />
+                            {errors.email && (
+                                <span className="error-message">{errors.email}</span>
+                            )}
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">
+                                <FaUser />
+                                First Name *
+                            </label>
+                            <input
+                                type="text"
+                                name="firstName"
+                                value={formData.firstName}
+                                onChange={handleInputChange}
+                                className={`form-input ${errors.firstName ? 'error' : ''}`}
+                                placeholder="Enter first name"
+                            />
+                            {errors.firstName && (
+                                <span className="error-message">{errors.firstName}</span>
+                            )}
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">
+                                <FaUser />
+                                Last Name *
+                            </label>
+                            <input
+                                type="text"
+                                name="lastName"
+                                value={formData.lastName}
+                                onChange={handleInputChange}
+                                className={`form-input ${errors.lastName ? 'error' : ''}`}
+                                placeholder="Enter last name"
+                            />
+                            {errors.lastName && (
+                                <span className="error-message">{errors.lastName}</span>
+                            )}
+                        </div>
+
+                        {!isEditMode && (
+                            <>
+                                <div className="form-group">
+                                    <label className="form-label">
+                                        <FaKey />
+                                        Password *
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleInputChange}
+                                        className={`form-input ${errors.password ? 'error' : ''}`}
+                                        placeholder="Enter password"
+                                    />
+                                    {errors.password && (
+                                        <span className="error-message">{errors.password}</span>
+                                    )}
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">
+                                        <FaKey />
+                                        Confirm Password *
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="confirmPassword"
+                                        value={formData.confirmPassword}
+                                        onChange={handleInputChange}
+                                        className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
+                                        placeholder="Confirm password"
+                                    />
+                                    {errors.confirmPassword && (
+                                        <span className="error-message">{errors.confirmPassword}</span>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        <div className="form-group role-select-group">
+                            <label className="form-label">
+                                <FaUserTag />
+                                Role *
+                            </label>
+                            <select
+                                name="role"
+                                value={formData.role}
+                                onChange={handleInputChange}
+                                className={`form-input ${errors.role ? 'error' : ''}`}
+                            >
+                                {roleOptions.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label} - {option.description}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.role && (
+                                <span className="error-message">{errors.role}</span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="form-actions">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/users')}
+                            className="cancel-btn"
+                            disabled={loading}
+                        >
+                            <FaTimes />
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="save-btn"
+                            disabled={loading}
+                        >
+                            <FaSave />
+                            {loading ? 'Saving...' : (isEditMode ? 'Update User' : 'Create User')}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 };
 
-export default UserCreationForm;
+export default User;

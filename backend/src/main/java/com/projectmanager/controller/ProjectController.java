@@ -59,8 +59,9 @@ public class ProjectController {
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest request, Principal principal) {
         // The principal object contains information about the authenticated user
-        String userId = principal.getName();
-        ProjectResponse createdProject = projectService.createProject(request, userId);
+//        String userId = principal.getName();
+
+        ProjectResponse createdProject = projectService.createProject(request, "47f98275-1d5d-45b9-be9d-5e8f78a27b67");
         return new ResponseEntity<>(createdProject, HttpStatus.CREATED);
     }
 
