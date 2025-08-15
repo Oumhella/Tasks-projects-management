@@ -7,6 +7,7 @@ import User from "./components/users/User";
 import ProjectsPage from "./components/project/ProjectsPage";
 import TasksPage from "./components/task/TasksPage";
 import Dashboard from "./pages/Dashboard";
+import ProjectDetail from "./components/project/ProjectDetail";
 
 // TODO: Keycloak integration will be added here
 // import { ReactKeycloakProvider } from '@react-keycloak/web';
@@ -26,6 +27,7 @@ const App: React.FC = () => {
                     <Route path="/projects" element={<ProjectsPage />} />
                     <Route path="/projects/create" element={<ProjectsPage />} />
                     <Route path="/projects/:id/edit" element={<ProjectsPage />} />
+                    <Route path="/projects/:id" element={<ProjectsPage />} />
                     <Route path="/tasks" element={<TasksPage />} />
                     <Route path="/tasks/create" element={<TasksPage />} />
                     <Route path="/tasks/:id/edit" element={<TasksPage />} />

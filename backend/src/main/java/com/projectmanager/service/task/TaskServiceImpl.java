@@ -128,4 +128,11 @@ public TaskResponse updateTask(UUID id, TaskRequest request) {
 public void deleteTask(UUID id) {
     taskRepository.deleteById(id);
 }
+
+    @Override
+    @Transactional(readOnly = true) // Use a read-only transaction for fetching
+    public List<TaskResponse> getTasksByProjectId(UUID projectId) {
+       List<Task> tasks = taskRepository.findTaskByProjectId(projectId);
+        return tasks.stream().map(taskMapper::toResponse).collect(Collectors.toList());
+    }
 }

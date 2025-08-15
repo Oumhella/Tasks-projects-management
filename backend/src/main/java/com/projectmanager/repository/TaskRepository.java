@@ -6,6 +6,7 @@ import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.model.task.TaskType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,6 +22,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.comments ORDER BY t.createdAt DESC")
     List<Task> findAllWithComments();
     List<Task> findByType(TaskType type);
-        
 
+
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.comments LEFT JOIN FETCH t.project p WHERE p.id = :projectId ORDER BY t.createdAt DESC")
+    List<Task> findTaskByProjectId(@Param("projectId") UUID projectId);
 }

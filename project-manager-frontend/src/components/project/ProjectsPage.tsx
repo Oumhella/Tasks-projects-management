@@ -5,28 +5,44 @@ import ProjectForm from './ProjectForm';
 import ProjectList from './ProjectList';
 import ProjectDetail from './ProjectDetail';
 import './ProjectsPage.css';
+import apiService from "../../services/api";
 
 const ProjectsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [view, setView] = useState<'list' | 'create' | 'edit' | 'detail'>('list');
     const [selectedProject, setSelectedProject] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (id) {
-            if (window.location.pathname.includes('/edit')) {
-                setView('edit');
-                // TODO: Fetch project data for editing
+        const fetchProjectDetails = async () => {
+            if (id) {
+                setLoading(true);
+                try {
+                    const projectData = await apiService.getProject(id);
+                    setSelectedProject(projectData);
+                    if (window.location.pathname.includes('/edit')) {
+                        setView('edit');
+                    } else {
+                        setView('detail');
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch project details:", error);
+                    // Handle error, e.g., navigate to a 404 page or show an error message
+                    navigate('/projects');
+                } finally {
+                    setLoading(false);
+                }
+            } else if (window.location.pathname.includes('/create')) {
+                setView('create');
             } else {
-                setView('detail');
-                // TODO: Fetch project data for viewing
+                setView('list');
             }
-        } else if (window.location.pathname.includes('/create')) {
-            setView('create');
-        } else {
-            setView('list');
-        }
-    }, [id]);
+        };
+
+        fetchProjectDetails();
+    }, [id, navigate]);
+
 
     const handleCreateProject = () => {
         navigate('/projects/create');
@@ -52,6 +68,9 @@ const ProjectsPage: React.FC = () => {
     };
 
     const renderContent = () => {
+        if (loading) {
+            return <div className="p-6 text-center text-gray-500">Loading project details...</div>;
+        }
         switch (view) {
             case 'create':
                 return (
@@ -88,7 +107,7 @@ const ProjectsPage: React.FC = () => {
                     </div>
                 );
             case 'detail':
-                return (
+                return selectedProject ? (
                     <div className="projects-page-container">
                         <div className="page-header">
                             <h1 className="page-title">Project Details</h1>
@@ -110,6 +129,8 @@ const ProjectsPage: React.FC = () => {
                         </div>
                         <ProjectDetail project={selectedProject} />
                     </div>
+                ): (
+                    <div className="p-6 text-center text-gray-500">Project not found.</div>
                 );
             default:
                 return (

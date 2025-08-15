@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCalendar, FaClock, FaUsers, FaTasks, FaPlus, FaEdit, FaTrash, FaUser } from 'react-icons/fa';
+import apiService from "../../services/api";
 
 interface Project {
     id: string;
@@ -39,55 +40,63 @@ interface ProjectDetailProps {
 const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string>('');
 
+    // Use a single useEffect hook to handle all data fetching for this component.
+    // The dependency array `[project.id]` ensures this effect runs whenever the project prop changes.
     useEffect(() => {
-        // TODO: Replace with actual API calls when backend is connected
-        // For now, using mock data
-        setTasks([
-            {
-                id: '1',
-                title: 'Design User Interface',
-                description: 'Create wireframes and mockups for the new feature',
-                status: 'IN_PROGRESS',
-                priority: 'HIGH',
-                type: 'FEATURE',
-                estimatedHours: 16,
-                dueDate: '2024-02-15',
-                assignedToUserId: 'user1'
-            },
-            {
-                id: '2',
-                title: 'Implement Backend API',
-                description: 'Develop REST endpoints for data management',
-                status: 'TODO',
-                priority: 'CRITICAL',
-                type: 'TASK',
-                estimatedHours: 24,
-                dueDate: '2024-02-20',
-                assignedToUserId: 'user2'
+        const fetchData = async () => {
+            if (!project || !project.id) {
+                setLoading(false);
+                return;
             }
-        ]);
 
-        setTeamMembers([
-            {
-                id: '1',
-                name: 'John Doe',
-                email: 'john@example.com',
-                role: 'Project Manager'
-            },
-            {
-                id: '2',
-                name: 'Jane Smith',
-                email: 'jane@example.com',
-                role: 'Developer'
-            },
-            {
-                id: '3',
-                name: 'Bob Johnson',
-                email: 'bob@example.com',
-                role: 'Designer'
+            setLoading(true);
+            setError('');
+
+            try {
+                // Fetch tasks for the project
+                const fetchedTasks = await apiService.getTasksByProjectId(project.id);
+                setTasks(fetchedTasks);
+
+                // Fetch team members based on the project's member IDs
+                // This is a placeholder as your API doesn't have a getMembersByProjectId endpoint.
+                // You would need to make a call for each member or a single call to a users endpoint.
+                // For now, let's keep the mock data for team members as it was.
+                // A better approach would be:
+                // const memberPromises = project.memberIds.map(memberId => apiService.getUser(memberId));
+                // const fetchedMembers = await Promise.all(memberPromises);
+                setTeamMembers([
+                    {
+                        id: '1',
+                        name: 'John Doe',
+                        email: 'john@example.com',
+                        role: 'Project Manager'
+                    },
+                    {
+                        id: '2',
+                        name: 'Jane Smith',
+                        email: 'jane@example.com',
+                        role: 'Developer'
+                    },
+                    {
+                        id: '3',
+                        name: 'Bob Johnson',
+                        email: 'bob@example.com',
+                        role: 'Designer'
+                    }
+                ]);
+
+            } catch (err) {
+                console.error('Error fetching project data:', err);
+                setError('Failed to load project details. Please try again.');
+            } finally {
+                setLoading(false);
             }
-        ]);
+        };
+
+        fetchData();
     }, [project]);
 
     const getStatusColor = (status: string) => {
@@ -125,12 +134,20 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
         }
     };
 
+    if (loading) {
+        return <div className="p-6 text-center text-gray-500">Loading tasks and team members...</div>;
+    }
+
+    if (error) {
+        return <div className="p-6 text-center text-red-500">{error}</div>;
+    }
+
     return (
         <div className="space-y-6">
             {/* Project Header */}
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center space-x-4 mb-4">
-                    <div 
+                    <div
                         className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold"
                         style={{ backgroundColor: project.color }}
                     >
@@ -143,9 +160,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                         </span>
                     </div>
                 </div>
-                
                 <p className="text-gray-600 mb-6">{project.description}</p>
-                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center text-sm text-gray-600">
                         <FaCalendar className="mr-2" />
@@ -174,70 +189,69 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                         Add Task
                     </button>
                 </div>
-                
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Task
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Priority
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Type
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Due Date
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Task
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Priority
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Due Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {tasks.map((task) => (
-                                <tr key={task.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div>
-                                            <div className="text-sm font-medium text-gray-900">{task.title}</div>
-                                            <div className="text-sm text-gray-500">{task.description}</div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                        {tasks.map((task) => (
+                            <tr key={task.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                                        <div className="text-sm text-gray-500">{task.description}</div>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
                                             {getStatusLabel(task.status)}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
                                             {task.priority}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(task.type)}`}>
                                             {task.type}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex space-x-2">
-                                            <button className="text-blue-600 hover:text-blue-900">
-                                                <FaEdit />
-                                            </button>
-                                            <button className="text-red-600 hover:text-red-900">
-                                                <FaTrash />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex space-x-2">
+                                        <button className="text-blue-600 hover:text-blue-900">
+                                            <FaEdit />
+                                        </button>
+                                        <button className="text-red-600 hover:text-red-900">
+                                            <FaTrash />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
                         </tbody>
                     </table>
                 </div>
@@ -255,7 +269,6 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                         Add Member
                     </button>
                 </div>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {teamMembers.map((member) => (
                         <div key={member.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -280,4 +293,4 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     );
 };
 
-export default ProjectDetail; 
+export default ProjectDetail;

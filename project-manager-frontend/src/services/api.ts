@@ -76,7 +76,9 @@ class ApiService {
   async getTasksByStatus(status: string): Promise<any[]> {
     return this.request<any[]>(`/tasks/status/${status}`);
   }
-
+  async getTasksByProjectId(id: string): Promise<any[]> {
+    return this.request<any[]>(`/tasks/projects/${id}`);
+  }
   async createTask(task: any): Promise<any> {
     return this.request<any>('/tasks', {
       method: 'POST',

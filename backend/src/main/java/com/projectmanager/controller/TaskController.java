@@ -67,6 +67,13 @@ public class TaskController {
         return ResponseEntity.ok(updatedTask);
     }
 
+    @GetMapping("/projects/{id}")
+    public ResponseEntity<List<TaskResponse>> getTasksByProject(@PathVariable UUID id) {
+
+        List<TaskResponse> tasks = taskService.getTasksByProjectId(id);
+        return ResponseEntity.ok(tasks);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<TaskResponse> deleteTask(@PathVariable UUID id) {
         taskService.deleteTask(id);
