@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { FaEdit, FaEye, FaTrash, FaSearch } from 'react-icons/fa';
+import apiService from "../../services/api";
 
 interface TaskListProps {
     onEdit: (task: any) => void;
@@ -28,56 +29,94 @@ const TaskList: React.FC<TaskListProps> = ({ onEdit, onView }) => {
     const [statusFilter, setStatusFilter] = useState('');
     const [priorityFilter, setPriorityFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
+    const [error, setError] = useState('');
 
-    useEffect(() => {
+        const filteredtasks = useCallback(()=> {
+            let filtered = tasks;
+            if (searchTerm) {
+                filtered = filtered.filter(task =>
+                    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    task.priority.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            if (statusFilter){
+                filtered = filtered.filter(task => task.status === statusFilter);
+            }
+            setFilteredTasks(filtered);
+        },[tasks,searchTerm, statusFilter]);
+
+            useEffect(() => {
+                filteredtasks();
+            }, [filteredtasks]);
+
+
         // TODO: Replace with actual API call when backend is connected
         // For now, using mock data
-        const mockTasks: Task[] = [
-            {
-                id: '1',
-                title: 'Implement user authentication',
-                description: 'Add login and registration functionality',
-                priority: 'HIGH',
-                type: 'FEATURE',
-                status: 'IN_PR0GRESS',
-                estimatedHours: 8,
-                dueDate: '2024-02-15',
-                projectId: '1',
-                assignedToUserId: '1',
-                createdAt: '2024-01-15'
-            },
-            {
-                id: '2',
-                title: 'Fix navigation bug',
-                description: 'Navigation menu not working on mobile',
-                priority: 'CRITICAL',
-                type: 'BUG',
-                status: 'TODO',
-                estimatedHours: 4,
-                dueDate: '2024-01-20',
-                projectId: '1',
-                assignedToUserId: '2',
-                createdAt: '2024-01-16'
-            },
-            {
-                id: '3',
-                title: 'Design dashboard layout',
-                description: 'Create responsive dashboard design',
-                priority: 'MEDIUM',
-                type: 'TASK',
-                status: 'DONE',
-                estimatedHours: 6,
-                dueDate: '2024-01-25',
-                projectId: '2',
-                assignedToUserId: '3',
-                createdAt: '2024-01-10'
+        const fetchData = async() => {
+            try {
+                setLoading(true);
+                setError('');
+                const tasks = await apiService.getTasks();
+                setTasks(tasks);
+
+                } catch (err) {
+                console.error('Error fetching tasks:', err);
+                setError('Failed to load tasks. Please try again.');
+                } finally {
+                setLoading(false);
             }
-        ];
-        
-        setTasks(mockTasks);
-        setFilteredTasks(mockTasks);
-        setLoading(false);
+        };
+    useEffect(() => {
+        fetchData();
     }, []);
+    //     const mockTasks: Task[] = [
+    //         {
+    //             id: '1',
+    //             title: 'Implement user authentication',
+    //             description: 'Add login and registration functionality',
+    //             priority: 'HIGH',
+    //             type: 'FEATURE',
+    //             status: 'IN_PR0GRESS',
+    //             estimatedHours: 8,
+    //             dueDate: '2024-02-15',
+    //             projectId: '1',
+    //             assignedToUserId: '1',
+    //             createdAt: '2024-01-15'
+    //         },
+    //         {
+    //             id: '2',
+    //             title: 'Fix navigation bug',
+    //             description: 'Navigation menu not working on mobile',
+    //             priority: 'CRITICAL',
+    //             type: 'BUG',
+    //             status: 'TODO',
+    //             estimatedHours: 4,
+    //             dueDate: '2024-01-20',
+    //             projectId: '1',
+    //             assignedToUserId: '2',
+    //             createdAt: '2024-01-16'
+    //         },
+    //         {
+    //             id: '3',
+    //             title: 'Design dashboard layout',
+    //             description: 'Create responsive dashboard design',
+    //             priority: 'MEDIUM',
+    //             type: 'TASK',
+    //             status: 'DONE',
+    //             estimatedHours: 6,
+    //             dueDate: '2024-01-25',
+    //             projectId: '2',
+    //             assignedToUserId: '3',
+    //             createdAt: '2024-01-10'
+    //         }
+    //     ];
+    //
+    //     setTasks(mockTasks);
+    //     setFilteredTasks(mockTasks);
+    //     setLoading(false);
+    // }, []);
 
     useEffect(() => {
         let filtered = tasks;

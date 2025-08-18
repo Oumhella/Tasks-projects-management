@@ -19,11 +19,22 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     List<Task> findByPriority(TaskPriority priority);
 
-    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.comments ORDER BY t.createdAt DESC")
+    @Query("SELECT DISTINCT t FROM Task t " +
+            "LEFT JOIN FETCH t.project p " +
+            "LEFT JOIN FETCH t.comments " +
+            "LEFT JOIN FETCH t.assignedTo " +
+            "ORDER BY t.createdAt DESC")
     List<Task> findAllWithComments();
+
+
     List<Task> findByType(TaskType type);
 
 
-    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.comments LEFT JOIN FETCH t.project p WHERE p.id = :projectId ORDER BY t.createdAt DESC")
+    @Query("SELECT DISTINCT t FROM Task t " +
+            "LEFT JOIN FETCH t.project p " +
+            "LEFT JOIN FETCH t.comments " +
+            "LEFT JOIN FETCH t.assignedTo " +
+            "WHERE p.id = :projectId " +
+            "ORDER BY t.createdAt DESC")
     List<Task> findTaskByProjectId(@Param("projectId") UUID projectId);
 }

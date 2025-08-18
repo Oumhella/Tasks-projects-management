@@ -6,11 +6,12 @@ import ProjectList from './ProjectList';
 import ProjectDetail from './ProjectDetail';
 import './ProjectsPage.css';
 import apiService from "../../services/api";
+import TaskForm from "../task/TaskForm";
 
 const ProjectsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [view, setView] = useState<'list' | 'create' | 'edit' | 'detail'>('list');
+    const [view, setView] = useState<'list' | 'create' | 'edit' | 'detail' >('list');
     const [selectedProject, setSelectedProject] = useState<any>(null);
     const [loading, setLoading] = useState(false);
 
@@ -28,7 +29,6 @@ const ProjectsPage: React.FC = () => {
                     }
                 } catch (error) {
                     console.error("Failed to fetch project details:", error);
-                    // Handle error, e.g., navigate to a 404 page or show an error message
                     navigate('/projects');
                 } finally {
                     setLoading(false);
@@ -61,11 +61,19 @@ const ProjectsPage: React.FC = () => {
         setView('detail');
     };
 
+
+
     const handleBackToList = () => {
         navigate('/projects');
         setView('list');
         setSelectedProject(null);
     };
+
+    // const onAddTask = (project: any) =>{
+    //     setSelectedProject(project);
+    //     navigate(`tasks/projects/${selectedProject.id}`);
+    //     setView('editTasks');
+    // }
 
     const renderContent = () => {
         if (loading) {
@@ -102,7 +110,8 @@ const ProjectsPage: React.FC = () => {
                         <ProjectForm 
                             project={selectedProject} 
                             onSave={handleBackToList} 
-                            onCancel={handleBackToList} 
+                            onCancel={handleBackToList}
+                            isEdit={true}
                         />
                     </div>
                 );
@@ -132,6 +141,8 @@ const ProjectsPage: React.FC = () => {
                 ): (
                     <div className="p-6 text-center text-gray-500">Project not found.</div>
                 );
+            // case "editTasks":
+            //     return
             default:
                 return (
                     <div className="projects-page-container">

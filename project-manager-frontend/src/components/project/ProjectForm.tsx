@@ -53,7 +53,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel, is
             ...prev,
             [name]: value
         }));
-        // Clear error when user starts typing
         if (error) setError(null);
     };
 
@@ -86,7 +85,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel, is
         setError(null);
 
         try {
-            // Prepare data for API
             const projectData = {
                 ...formData,
                 startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
@@ -94,11 +92,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel, is
             };
 
             if (isEdit && project?.id) {
-                // Update existing project
                 await apiService.updateProject(project.id, projectData);
                 console.log('Project updated successfully');
             } else {
-                // Create new project
+
                 await apiService.createProject(projectData);
                 console.log('Project created successfully');
             }

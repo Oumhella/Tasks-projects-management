@@ -1,5 +1,20 @@
 
 services:
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ACCESS_KEY: biti
+      MINIO_SECRET_KEY: bitibiti
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9090"
+    restart: unless-stopped
+
+
   keycloak:
     image: quay.io/keycloak/keycloak:22.0
     environment:
@@ -26,3 +41,4 @@ services:
 
 volumes:
   postgres_data:
+  minio_data:

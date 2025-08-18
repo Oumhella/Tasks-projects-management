@@ -31,6 +31,7 @@ const App: React.FC = () => {
                     <Route path="/tasks" element={<TasksPage />} />
                     <Route path="/tasks/create" element={<TasksPage />} />
                     <Route path="/tasks/:id/edit" element={<TasksPage />} />
+                    <Route path="/tasks/:id" element={<TasksPage />} />
                 </Routes>
             </div>
         </div>

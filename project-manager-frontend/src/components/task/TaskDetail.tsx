@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaComments, FaPaperclip, FaUser, FaCalendar, FaClock, FaProjectDiagram, FaFlag, FaTag } from 'react-icons/fa';
+import apiService from "../../services/api";
+import api from "../../services/api";
+import {redirect} from "react-router-dom";
 
 interface TaskDetailProps {
     task: any;
@@ -8,7 +11,7 @@ interface TaskDetailProps {
 interface Comment {
     id: string;
     content: string;
-    createdAt: string;
+    taskId: string;
     user: {
         id: string;
         name: string;
@@ -31,63 +34,57 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
-
+    const [error, setError] = useState('');
+    const [attachment, setAttachment] = useState<Attachment | null>(null);
     useEffect(() => {
-        // TODO: Replace with actual API calls when backend is connected
-        // For now, using mock data
-        const mockComments: Comment[] = [
-            {
-                id: '1',
-                content: 'This task is progressing well. I should have it completed by the end of the week.',
-                createdAt: '2024-01-15T10:30:00Z',
-                user: { id: '1', name: 'John Doe' }
-            },
-            {
-                id: '2',
-                content: 'Great work! Let me know if you need any clarification.',
-                createdAt: '2024-01-15T14:20:00Z',
-                user: { id: '2', name: 'Jane Smith' }
-            }
-        ];
 
-        const mockAttachments: Attachment[] = [
-            {
-                id: '1',
-                fileName: 'design-mockup.pdf',
-                fileSize: 2048576,
-                uploadedAt: '2024-01-15T09:15:00Z',
-                uploadedBy: { id: '1', name: 'John Doe' }
-            },
-            {
-                id: '2',
-                fileName: 'requirements.docx',
-                fileSize: 512000,
-                uploadedAt: '2024-01-14T16:30:00Z',
-                uploadedBy: { id: '2', name: 'Jane Smith' }
+        const fetchData = async () => {
+            if (!task || !task.id) {
+                setLoading(false);
+                return;
             }
-        ];
+            setLoading(true);
+            setError('');
 
-        setComments(mockComments);
-        setAttachments(mockAttachments);
-        setLoading(false);
-    }, []);
+            try {
+                const comments = await apiService.getCommentsByTask(task.id);
+                setComments(comments);
+                const attachments = await apiService.getAttachmentsByTask(task.id);
+                setAttachments(attachments);
+
+            } catch (err) {
+                console.log("error fetching comments and attachments", err);
+                setError("error fetching data");
+            } finally {
+                setLoading(false);
+
+            }
+
+        };
+        fetchData();
+
+    }, [task]);
 
     const handleAddComment = async () => {
         if (!newComment.trim()) return;
 
         try {
-            // TODO: Replace with actual API call when backend is connected
-            const comment: Comment = {
-                id: Date.now().toString(),
-                content: newComment,
-                createdAt: new Date().toISOString(),
-                user: { id: '1', name: 'Current User' } // TODO: Get from auth context
+            const comment = {
+                content: newComment.trim(),
+                taskId: task.id,
+                user: {id: "1", name: "taskusername"}
             };
+            const createdComment = await apiService.createComment(comment);
+            setComments(prev => [createdComment, ...prev]);
 
-            setComments(prev => [comment, ...prev]);
             setNewComment('');
+
+
         } catch (error) {
             console.error('Error adding comment:', error);
+            setError("error adding comment");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -95,21 +92,23 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
         const files = event.target.files;
         if (!files || files.length === 0) return;
 
+        setLoading(true);
+        setError('');
         try {
-            // TODO: Replace with actual API call when backend is connected
             for (const file of Array.from(files)) {
-                const attachment: Attachment = {
-                    id: Date.now().toString(),
-                    fileName: file.name,
-                    fileSize: file.size,
-                    uploadedAt: new Date().toISOString(),
-                    uploadedBy: { id: '1', name: 'Current User' } // TODO: Get from auth context
-                };
 
-                setAttachments(prev => [attachment, ...prev]);
+                const createdAttachment = await apiService.uploadAttachment(file, task.id);
+
+                setAttachments(prev => [createdAttachment, ...prev]);
             }
         } catch (error) {
             console.error('Error uploading file:', error);
+            setError("error uploading file");
+            setTimeout(() => setError(''), 5000);
+
+        } finally {
+            setLoading(false);
+            event.target.value = '';
         }
     };
 
@@ -119,6 +118,42 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    // const handleFileDownload = async() =>{
+    //
+    //
+    // }
+
+    const getDownloadUrl= async (id: string) => {
+        try {
+            setLoading(true);
+            const url = await apiService.getAttachmentDownloadUrl(id);
+            if (url) {
+                window.location.href = url; // forces download
+                // OR: window.open(url, "_blank");
+            } else {
+                setError("No download URL received");
+            }
+        }catch (error){
+            console.error("error downloading attachments", error);
+            setError("Error downloading attachment");
+        }finally {
+            setLoading(false);
+        }
+
+    }
+
+    const hanleDeleteAttachment = async(id: string) => {
+        if(window.confirm("are you sure you want delete this attachment ?")) {
+            try {
+                await apiService.deleteAttachment(id);
+                setAttachments(prev => prev.filter(attachment => attachment.id === id));
+            } catch (error) {
+                console.error("Error deleting attachment", error);
+                setError("Error deleting attachment");
+            }
+        }
     };
 
     if (loading) {
@@ -138,6 +173,35 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     }
 
     return (
+        <div>
+        {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm font-medium">{error}</p>
+                    </div>
+                    <div className="ml-auto pl-3">
+                        <div className="-mx-1.5 -my-1.5">
+                            <button
+                                onClick={() => setError('')}
+                                className="inline-flex bg-red-50 rounded-md p-1.5 text-red-400 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                            >
+                                <span className="sr-only">Dismiss</span>
+                                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
         <div className="space-y-6">
             {/* Task Header */}
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -213,12 +277,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
                 {/* Comments List */}
                 <div className="space-y-4">
                     {comments.map((comment) => (
-                        <div key={comment.id} className="border-l-4 border-blue-500 pl-4 py-2">
+                        <div key={comment.content} className="border-l-4 border-blue-500 pl-4 py-2">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="font-medium text-gray-900">{comment.user.name}</span>
-                                <span className="text-sm text-gray-500">
-                                    {new Date(comment.createdAt).toLocaleString()}
-                                </span>
+                                <span className="font-medium text-gray-900">{"dddddd"}</span>
                             </div>
                             <p className="text-gray-700">{comment.content}</p>
                         </div>
@@ -252,15 +313,16 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
                                 <div>
                                     <div className="font-medium text-gray-900">{attachment.fileName}</div>
                                     <div className="text-sm text-gray-500">
-                                        {formatFileSize(attachment.fileSize)} • Uploaded by {attachment.uploadedBy.name}
+                                        {formatFileSize(attachment.fileSize)} • Uploaded by {"attachment.uploadedBy.name"}
                                     </div>
                                 </div>
                             </div>
                             <div className="flex space-x-2">
-                                <button className="text-blue-600 hover:text-blue-800 text-sm">
+                                <button onClick={() => getDownloadUrl(attachment.id)} className="text-blue-600
+                                    hover:text-blue-800 text-sm">
                                     Download
                                 </button>
-                                <button className="text-red-600 hover:text-red-800 text-sm">
+                                <button onClick={()=> {hanleDeleteAttachment(attachment.id)}} className="text-red-600 hover:text-red-800 text-sm">
                                     Delete
                                 </button>
                             </div>
@@ -269,6 +331,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
                 </div>
             </div>
         </div>
+    </div>
     );
 };
 

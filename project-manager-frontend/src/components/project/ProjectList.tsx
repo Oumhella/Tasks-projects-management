@@ -122,6 +122,8 @@ const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
         fetchProjects();
     }, []);
 
+
+
     const handleDeleteProject = async (projectId: string) => {
         if (window.confirm('Are you sure you want to delete this project?')) {
             try {
@@ -257,7 +259,6 @@ const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
                                 <div>End: {formatDate(project.endDate)}</div>
                             </div>
 
-                            {/* Project Actions */}
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => onView(project)}

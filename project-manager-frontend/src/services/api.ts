@@ -18,6 +18,7 @@ class ApiService {
     try {
       const response = await fetch(url, config);
 
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -28,12 +29,20 @@ class ApiService {
         return {} as T;
       }
 
-      return JSON.parse(text);
+      const contentType = response.headers.get('content-type');
+
+      if (contentType && contentType.includes('application/json')) {
+        return JSON.parse(text);
+      } else {
+        // Return plain text as-is (for URLs, etc.)
+        return text as T;
+      }
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error);
       throw error;
     }
   }
+
 
   // Project endpoints
   async getProjects(): Promise<any[]> {
@@ -197,9 +206,10 @@ class ApiService {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const text = await response.text();
-      return text ? JSON.parse(text) : {};
+      //
+      // const text = await response.text();
+      // return text ? JSON.parse(text) : {};
+      return await response.json();
     } catch (error) {
       console.error('File upload failed:', error);
       throw error;
@@ -208,6 +218,7 @@ class ApiService {
 
   async getAttachmentDownloadUrl(id: string): Promise<string> {
     const response = await this.request<{ downloadUrl: string }>(`/attachments/${id}/download-url`);
+   console.log(response);
     return response.downloadUrl;
   }
 

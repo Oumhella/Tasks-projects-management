@@ -41,6 +41,7 @@ public class ActivityServiceImpl implements ActivityService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createActivity(Activity activity) {
 
+
         Activity savedActivity = activityRepository.save(activity);
 
         Set<User> recipients = determineRecipients(savedActivity);

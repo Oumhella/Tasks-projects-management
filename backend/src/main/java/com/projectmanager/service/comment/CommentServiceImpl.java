@@ -66,13 +66,11 @@ public class CommentServiceImpl implements CommentService{
     public CommentResponse createComment(CommentRequest request, String userId) {
         Comment comment = commentMapper.toEntity(request);
 
-        // 1. Fetch the user once from the authenticated userId
         UUID user_Id = UUID.fromString(userId);
         User user = userService.getUserById(user_Id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_Id));
         comment.setUser(user);
 
-        // 2. Fetch and set the Task entity
         if (request.getTaskId() == null) {
             throw new IllegalArgumentException("Task ID cannot be null");
         }
@@ -80,7 +78,6 @@ public class CommentServiceImpl implements CommentService{
                 .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + request.getTaskId()));
         comment.setTask(task);
 
-        // The content is already mapped by the mapper
 
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());

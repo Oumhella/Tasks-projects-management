@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaCalendar, FaClock, FaUsers, FaTasks, FaPlus, FaEdit, FaTrash, FaUser } from 'react-icons/fa';
 import apiService from "../../services/api";
+import TaskForm from "../task/TaskForm";
+import {useNavigate} from "react-router-dom";
 
 interface Project {
     id: string;
@@ -42,8 +44,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
-
-    // Use a single useEffect hook to handle all data fetching for this component.
+    const navigate = useNavigate();
+    const [showTaskForm, setShowTaskForm] = useState(false);
+        // Use a single useEffect hook to handle all data fetching for this component.
     // The dependency array `[project.id]` ensures this effect runs whenever the project prop changes.
     useEffect(() => {
         const fetchData = async () => {
@@ -99,6 +102,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
         fetchData();
     }, [project]);
 
+
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'PLANNING': return 'bg-blue-100 text-blue-800';
@@ -124,6 +129,26 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
         }
     };
 
+    const handleAddTask = () => {
+        setShowTaskForm(true);
+    };
+
+    // Handle successful task creation/update - refresh tasks
+    const handleTaskSaved = async () => {
+        setShowTaskForm(false);
+        // try {
+        //     const fetchedTasks = await apiService.getTasksByProjectId(project.id);
+        //     setTasks(fetchedTasks);
+        // } catch (err) {
+        //     console.error('Error refreshing tasks:', err);
+        // }
+    };
+
+    // Handle task form cancellation
+    const handleTaskFormCancel = () => {
+        setShowTaskForm(false);
+    };
+    
     const getTypeColor = (type: string) => {
         switch (type) {
             case 'BUG': return 'bg-red-100 text-red-800';
@@ -141,6 +166,25 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     if (error) {
         return <div className="p-6 text-center text-red-500">{error}</div>;
     }
+
+    if (showTaskForm) {
+        return (
+            <TaskForm
+                projectId={project.id}
+                readOnlyProject={true}
+                onSave={handleTaskSaved}
+                onCancel={handleTaskFormCancel}
+            />
+        );
+    }
+    // const handleAddTask = (project: any) => {
+    //     <TaskForm
+    //         projectId={project.id}
+    //         onSave={() => navigate(`/projects/${project.id}`)}
+    //         onCancel={() => navigate(`/projects/${project.id}`)}
+    //     />
+    // };
+    //
 
     return (
         <div className="space-y-6">
@@ -184,7 +228,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                         <FaTasks className="mr-2" />
                         Project Tasks ({tasks.length})
                     </h3>
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors flex items-center">
+                    <button onClick={handleAddTask} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors flex items-center">
                         <FaPlus className="mr-2" />
                         Add Task
                     </button>

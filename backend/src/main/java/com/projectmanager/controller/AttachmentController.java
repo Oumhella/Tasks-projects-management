@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,16 +69,11 @@ public class AttachmentController {
     }
 
     @GetMapping("/{id}/download-url")
-    public ResponseEntity<String> getDownloadUrl(@PathVariable UUID id) {
-        try {
-            String downloadUrl = attachmentService.getPresignedDownloadUrl(id);
-            return ResponseEntity.ok(downloadUrl);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().body("Failed to generate download URL");
-        }
+    public ResponseEntity<Map<String, String>> getDownloadUrl(@PathVariable UUID id) throws IOException {
+        String downloadUrl = attachmentService.getPresignedDownloadUrl(id);
+        return ResponseEntity.ok(Map.of("downloadUrl", downloadUrl));
     }
+
 
 //    @GetMapping("/{id}")
 //    public ResponseEntity<Resource> downloadAttachment(@PathVariable UUID id) {
