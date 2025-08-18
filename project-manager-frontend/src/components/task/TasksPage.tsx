@@ -16,10 +16,8 @@ const TasksPage: React.FC = () => {
         if (id) {
             if (window.location.pathname.includes('/edit')) {
                 setView('edit');
-                // TODO: Fetch task data for editing
             } else {
                 setView('detail');
-                // TODO: Fetch task data for viewing
             }
         } else if (window.location.pathname.includes('/create')) {
             setView('create');

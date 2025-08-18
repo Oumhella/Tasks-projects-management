@@ -14,45 +14,42 @@ import java.util.UUID;
 
 @Service
 public class KeycloakUserService {
-
     private final Keycloak keycloak;
-    private final String realm;
+    private final String targetRealm;  // Changed from 'realm' to 'targetRealm'
 
-    public KeycloakUserService(Keycloak keycloak, String realm) {
+    public KeycloakUserService(Keycloak keycloak, String targetRealm) {
         this.keycloak = keycloak;
-        this.realm = realm;
+        this.targetRealm = targetRealm;
     }
 
-    /**
-     * Creates a new user in Keycloak and returns their Keycloak-generated UUID.
-     */
     public UUID createKeycloakUser(String username, String email, String password, String role) {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(username);
         user.setEmail(email);
         user.setEnabled(true);
+        user.setRealmRoles(Collections.singletonList(role));
 
+        // Set credentials
         CredentialRepresentation credential = new CredentialRepresentation();
-        credential.setTemporary(false);
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(password);
-        user.setCredentials(List.of(credential));
-        user.setRealmRoles(List.of(role));
+        credential.setTemporary(false);
+        user.setCredentials(Collections.singletonList(credential));
 
-        try (Response response = keycloak.realm(realm).users().create(user)) {
-            if (response.getStatus() == HttpStatus.CREATED.value()) {
-                String locationHeader = response.getHeaderString("Location");
-                String keycloakIdString = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
-                return UUID.fromString(keycloakIdString);
+        // Create user in target realm
+        try (Response response = keycloak.realm("master").users().create(user)) {
+            if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
+                String location = response.getLocation().getPath();
+                String userId = location.substring(location.lastIndexOf('/') + 1);
+                return UUID.fromString(userId);
             } else {
-                throw new RuntimeException("Failed to create Keycloak user: " + response.getStatus());
+                throw new RuntimeException("Failed to create user: " + response.getStatus());
             }
         }
     }
 
-
     public void updateKeycloakUser(UUID keycloakId, String newUsername, String newEmail, String newRole) {
-        UserResource userResource = keycloak.realm(realm).users().get(keycloakId.toString());
+        UserResource userResource = keycloak.realm(targetRealm).users().get(keycloakId.toString());
         UserRepresentation user = userResource.toRepresentation();
 
         user.setUsername(newUsername);
@@ -64,6 +61,6 @@ public class KeycloakUserService {
 
 
     public void deleteKeycloakUser(UUID keycloakId) {
-        keycloak.realm(realm).users().delete(keycloakId.toString());
+        keycloak.realm(targetRealm).users().delete(keycloakId.toString());
     }
 }

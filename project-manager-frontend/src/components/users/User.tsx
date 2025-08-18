@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaSave, FaTimes, FaUser, FaEnvelope, FaKey, FaUserTag } from 'react-icons/fa';
 import './user.css';
+import apiService from "../../services/api";
 
 interface UserFormData {
     username: string;
@@ -12,7 +13,15 @@ interface UserFormData {
     lastName: string;
     role: string;
 }
-
+interface User {
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+}
 const User: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -26,26 +35,41 @@ const User: React.FC = () => {
         role: 'developer'
     });
 
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Partial<UserFormData>>({});
     const [isEditMode, setIsEditMode] = useState(false);
 
     useEffect(() => {
-        if (id) {
-            setIsEditMode(true);
-            // TODO: Fetch user data for editing when backend is connected
-            // For now, using mock data
-            setFormData({
-                username: 'john.doe',
-                email: 'john.doe@example.com',
-                password: '',
-                confirmPassword: '',
-                firstName: 'John',
-                lastName: 'Doe',
-                role: 'developer'
-            });
-        }
-    }, [id]);
+        const fetchUserData = async () => {
+            if (id) {
+                setIsEditMode(true);
+                try {
+                    setLoading(true);
+                    const userData = await apiService.getUser(id);
+                    // Populate form with fetched data
+                    setFormData({
+                        username: userData.username,
+                        email: userData.email,
+                        password: '', // Passwords are not fetched for security reasons
+                        confirmPassword: '',
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        role: userData.role
+                    });
+                } catch (error) {
+                    console.error('Failed to fetch user data:', error);
+                    // Navigate to the user list or show an error message
+                    navigate('/users');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, [id, navigate]);
+
 
     const validateForm = (): boolean => {
         const newErrors: Partial<UserFormData> = {};
@@ -90,23 +114,17 @@ const User: React.FC = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
 
         // Clear error when user starts typing
         if (errors[name as keyof UserFormData]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: undefined
-            }));
+            setErrors(prev => ({ ...prev, [name]: undefined }));
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
@@ -114,21 +132,37 @@ const User: React.FC = () => {
         setLoading(true);
 
         try {
-            // TODO: Replace with actual API call when backend is connected
-            console.log('User data to save:', formData);
-            
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Redirect to user list
+            if (isEditMode && id) {
+                // Update existing user
+                const userUpdateData = {
+                    username: formData.username,
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    role: formData.role
+                };
+                await apiService.updateUser(id, userUpdateData);
+            } else {
+                // Create new user
+                const userCreateData = {
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    role: formData.role
+                };
+                await apiService.createUser(userCreateData);
+            }
             navigate('/users');
         } catch (error) {
             console.error('Error saving user:', error);
+            // Handle error, e.g., show an error message on the form
+            setErrors({ email: 'Failed to save user. Please try again.' });
         } finally {
             setLoading(false);
         }
     };
-
     const roleOptions = [
         { value: 'admin', label: 'Administrator', description: 'Full system access' },
         { value: 'project-manager', label: 'Project Manager', description: 'Manage projects and teams' },
@@ -137,6 +171,14 @@ const User: React.FC = () => {
         { value: 'tester', label: 'Tester', description: 'Test and quality assurance' },
         { value: 'viewer', label: 'Viewer', description: 'Read-only access' }
     ];
+
+    if (isEditMode && loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="user-container">

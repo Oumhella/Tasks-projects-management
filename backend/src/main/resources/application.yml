@@ -7,8 +7,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/project-manager
-#          jwk-set-uri: http://localhost:8080/realms/project-manager/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/master
+          jwk-set-uri: http://localhost:8080/realms/master/protocol/openid-connect/certs
   datasource:
     url: jdbc:postgresql://localhost:5432/projectmanager
     username: postgres
@@ -19,9 +19,9 @@ spring:
 
 keycloak:
   auth-server-url: http://localhost:8080
-  realm: project-manager
-  client_id: project-manager-client
-  client-secret: zvWp7DOJzI2V5HEFOgKCGG0y4xkX6sDg
+  target-realm: master
+  client-id: admin-cli
+  client-secret: JD2j1t7OTiHHU3glZoSrJcVcsKpzAorT
   username: admin
   password: admin
 

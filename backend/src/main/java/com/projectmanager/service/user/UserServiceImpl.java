@@ -33,10 +33,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(UserRequest request) {
-        // 1. Create user in Keycloak
         UUID keycloakId = keycloakUserService.createKeycloakUser(request.getUsername(), request.getEmail(), request.getPassword(), request.getRole());
 
-        // 2. Create and save the user entity in the local database
         User user = userMapper.toEntity(request);
         user.setKeycloakId(keycloakId);
         user.setCreatedAt(LocalDateTime.now());
@@ -46,20 +44,17 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(savedUser);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @Override
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
         return userMapper.toResponseList(users);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @Override
     public Optional<User> getUserById(UUID id) {
         return userRepository.findById(id);
     }
 
-    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     @Transactional
     public UserResponse updateUser(UUID id, UserUpdateRequest updateRequest) {
@@ -75,14 +70,12 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(updatedUser);
     }
 
-    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     @Transactional
     public void deleteUser(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
 
-        // 💡 You should also delete the user from Keycloak
         keycloakUserService.deleteKeycloakUser(user.getKeycloakId());
 
         userRepository.deleteById(id);

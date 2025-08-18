@@ -1,0 +1,176 @@
+.task-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem;
+    font-family: system-ui, sans-serif;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.card-header h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.labels {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+textarea {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+}
+
+button {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+}
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+button:hover:not(:disabled) {
+    background: #1e40af;
+}
+
+.upload-btn {
+    display: inline-block;
+    background: #2563eb;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.upload-btn input {
+    display: none;
+}
+
+.comments, .attachments {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.comment {
+    border-left: 4px solid #2563eb;
+    padding-left: 0.75rem;
+}
+
+.attachment {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.attachment small {
+    color: #666;
+}
+
+.delete-btn {
+    background: #dc2626;
+}
+.delete-btn:hover {
+    background: #991b1b;
+}
+
+/* badges colors */
+.priority-critical { background: #fee2e2; color: #b91c1c; }
+.priority-high { background: #ffedd5; color: #c2410c; }
+.priority-medium { background: #fef9c3; color: #854d0e; }
+.priority-low { background: #dcfce7; color: #166534; }
+.priority-default { background: #e5e7eb; color: #374151; }
+
+.type-bug { background: #fee2e2; color: #991b1b; }
+.type-feature { background: #dbeafe; color: #1e3a8a; }
+.type-task { background: #dcfce7; color: #166534; }
+.type-story { background: #ede9fe; color: #5b21b6; }
+.type-default { background: #f3f4f6; color: #374151; }
+
+.status-todo { background: #f3f4f6; color: #374151; }
+.status-progress { background: #dbeafe; color: #1e3a8a; }
+.status-review { background: #ede9fe; color: #5b21b6; }
+.status-testing { background: #fef9c3; color: #854d0e; }
+.status-done { background: #dcfce7; color: #166534; }
+.status-closed { background: #e5e7eb; color: #6b7280; }
+.status-default { background: #f3f4f6; color: #374151; }
+
+/* loading + alerts */
+.loading {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #ddd;
+    border-top: 3px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.alert {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    color: #b91c1c;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.alert button {
+    background: none;
+    color: inherit;
+    font-size: 1.25rem;
+    cursor: pointer;
+}

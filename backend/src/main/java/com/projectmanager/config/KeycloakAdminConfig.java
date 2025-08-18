@@ -13,43 +13,39 @@ public class KeycloakAdminConfig {
     @Value("${keycloak.auth-server-url}")
     private String serverUrl;
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.target-realm}")  // Use project-manager for operations
     private String targetRealm;
 
-    @Value("${keycloak.client_id}")
+    @Value("${keycloak.client-id}")
     private String clientId;
+
+//    @Value("${keycloak.client-secret}")
+//    private String clientSecret;
+
     @Value("${keycloak.username}")
     private String username;
-
-    @Value("${keycloak.client-secret}")
-    private String clientSecret;
 
     @Value("${keycloak.password}")
     private String password;
 
+    @Value("${keycloak.client-secret}")
+    private String clientSecret;
 
     @Bean
     public Keycloak keycloakAdminClient() {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .realm(targetRealm)               // authenticate TO the target realm
-                .clientId(clientId)               // project-manager-client
-                .clientSecret(clientSecret)       // set client secret (use builder method below)
-                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+                .realm(targetRealm)
+                .clientId(clientId)
+                .clientSecret(clientSecret)  // Add this
+                .username(username)
+                .password(password)
+                .grantType(OAuth2Constants.PASSWORD)
                 .build();
     }
-//        return KeycloakBuilder.builder()
-//                .serverUrl("http://localhost:8080/") // Your Keycloak URL
-//                .realm("master") // If you're using master admin, otherwise use your realm
-//                .clientId("admin-cli") // Built-in Keycloak client
-//                .username("admin") // Keycloak admin username
-//                .password("admin") // Keycloak admin password
-//                .grantType(OAuth2Constants.PASSWORD)
-//                .build();
-//    }
 
     @Bean
     public String keycloakTargetRealm() {
-        return targetRealm;
+        return targetRealm;  // project-manager
     }
 }

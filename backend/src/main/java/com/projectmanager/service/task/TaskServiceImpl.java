@@ -7,7 +7,9 @@ import com.projectmanager.entity.Task;
 import com.projectmanager.entity.User;
 import com.projectmanager.mapper.TaskMapper;
 import com.projectmanager.model.task.TaskStatus;
+import com.projectmanager.repository.ActivityRepository;
 import com.projectmanager.repository.TaskRepository;
+import com.projectmanager.service.activity.ActivityService;
 import com.projectmanager.service.project.ProjectService;
 import com.projectmanager.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,12 +32,14 @@ public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
     private final UserService userService;
     private final ProjectService projectService;
+    private final ActivityRepository activityRepository;
     @Autowired
-    public TaskServiceImpl(TaskRepository taskRepository, TaskMapper taskMapper, ProjectService projectService, UserService userService) {
+    public TaskServiceImpl(TaskRepository taskRepository, TaskMapper taskMapper, ProjectService projectService, UserService userService, ActivityRepository activityRepository) {
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
         this.projectService = projectService;
         this.userService = userService;
+        this.activityRepository = activityRepository;
     }
 
 //    @PreAuthorize("hasRole('admin_ROLE')")
@@ -126,6 +130,7 @@ public TaskResponse updateTask(UUID id, TaskRequest request) {
 @Override
 @Transactional
 public void deleteTask(UUID id) {
+    activityRepository.deleteByTaskId(id);
     taskRepository.deleteById(id);
 }
 

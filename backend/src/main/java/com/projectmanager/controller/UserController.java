@@ -27,21 +27,18 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
-    @PreAuthorize("permitAll()")
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest request) {
         UserResponse user = userService.createUser(request);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
         Optional<User> user = userService.getUserById(id);
@@ -52,14 +49,12 @@ public class UserController {
         return ResponseEntity.ok(userResponse);
     }
 
-    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @RequestBody UserUpdateRequest request) {
         UserResponse updatedUser = userService.updateUser(id, request);
         return ResponseEntity.ok(updatedUser);
     }
 
-    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);

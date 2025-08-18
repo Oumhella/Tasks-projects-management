@@ -24,6 +24,9 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
+      KC_LOG_LEVEL: DEBUG # Sets the root log level to DEBUG
+      KC_LOG_CONSOLE_LEVEL: INFO # Optional: Sets console log level
+      KC_LOG_FILE_LEVEL: DEBUG # Optional: Sets file log level
     ports:
       - "8080:8080"
     depends_on:

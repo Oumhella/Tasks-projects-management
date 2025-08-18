@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import apiService from "../../services/api";
+import './TaskForm.css'; // Import the CSS file
 
 interface TaskFormProps {
     task?: any;
@@ -8,6 +9,7 @@ interface TaskFormProps {
     readOnlyProject?: boolean;
     onSave: () => void;
     onCancel: () => void;
+    // isEdit?: boolean;
 }
 
 interface TaskFormData {
@@ -20,10 +22,9 @@ interface TaskFormData {
     dueDate: string;
     projectId: string;
     assignedToUserId: string;
-
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , onSave, onCancel }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, onSave, onCancel}) => {
     const [formData, setFormData] = useState<TaskFormData>({
         title: '',
         description: '',
@@ -34,7 +35,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
         dueDate: '',
         projectId: projectId || '',
         assignedToUserId: ''
-
     });
 
     const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([]);
@@ -103,7 +103,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                 throw new Error('Project is required');
             }
 
-
             const taskData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
@@ -117,7 +116,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
             };
 
             if (task) {
-
                 await apiService.updateTask(task.id, taskData);
             } else {
                 await apiService.createTask(taskData);
@@ -157,35 +155,33 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
 
     if (initialLoading) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    <span className="ml-3 text-gray-600">Loading form data...</span>
-                </div>
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <span className="loading-text">Loading form data...</span>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="task-form-container">
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <div className="error-message">
+                    <div className="error-content">
+                        <div className="error-icon">
+                            <svg viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                             </svg>
                         </div>
-                        <div className="ml-3">
-                            <p className="text-sm font-medium">{error}</p>
+                        <div>
+                            <p className="error-text">{error}</p>
                         </div>
-                        <div className="ml-auto pl-3">
+                        <div className="error-dismiss">
                             <button
                                 onClick={() => setError('')}
-                                className="inline-flex bg-red-50 rounded-md p-1.5 text-red-400 hover:bg-red-100"
+                                className="error-dismiss-button"
                             >
                                 <span className="sr-only">Dismiss</span>
-                                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <svg viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                                 </svg>
                             </button>
@@ -194,10 +190,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+            <form onSubmit={handleSubmit} className="task-form">
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="form-label">
                             Title *
                         </label>
                         <input
@@ -206,26 +202,26 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                             value={formData.title}
                             onChange={handleInputChange}
                             required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-input"
                             placeholder="Enter task title"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label">
                             Project *
                         </label>
                         {readOnlyProject && projectId ? (
-                            <div className="flex items-center space-x-3">
+                            <div className="form-group">
                                 <input
                                     type="text"
                                     value={projects.find(p => p.id === formData.projectId)?.name || 'Loading...'}
                                     disabled
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+                                    className="form-input"
                                 />
-                                <span className="text-sm text-gray-500 italic">
-                (Fixed to current project)
-            </span>
+                                <span className="fixed-project-note">
+                                    (Fixed to current project)
+                                </span>
                             </div>
                         ) : (
                             <select
@@ -233,7 +229,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                                 value={formData.projectId}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="form-select"
                             >
                                 <option value="">Select a project</option>
                                 {projects.map((project) => (
@@ -245,15 +241,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                         )}
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label">
                             Priority
                         </label>
                         <select
                             name="priority"
                             value={formData.priority}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-select"
                         >
                             {priorityOptions.map(option => (
                                 <option key={option.value} value={option.value}>
@@ -263,15 +259,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label">
                             Type
                         </label>
                         <select
                             name="type"
                             value={formData.type}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-select"
                         >
                             {typeOptions.map(option => (
                                 <option key={option.value} value={option.value}>
@@ -281,15 +277,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label">
                             Status
                         </label>
                         <select
                             name="status"
                             value={formData.status}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-select"
                         >
                             {statusOptions.map(option => (
                                 <option key={option.value} value={option.value}>
@@ -299,15 +295,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label">
                             Assigned To
                         </label>
                         <select
                             name="assignedToUserId"
                             value={formData.assignedToUserId}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-select"
                         >
                             <option value="">Unassigned</option>
                             {users.map((user) => (
@@ -318,8 +314,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label">
                             Estimated Hours
                         </label>
                         <input
@@ -328,13 +324,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                             value={formData.estimatedHours}
                             onChange={handleInputChange}
                             min="0"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-input"
                             placeholder="0"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="form-group">
+                        <label className="form-label">
                             Due Date
                         </label>
                         <input
@@ -342,13 +338,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                             name="dueDate"
                             value={formData.dueDate}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="form-input"
                         />
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="form-group">
+                    <label className="form-label">
                         Description
                     </label>
                     <textarea
@@ -356,27 +352,27 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject , 
                         value={formData.description}
                         onChange={handleInputChange}
                         rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="form-textarea"
                         placeholder="Enter task description"
                     />
                 </div>
 
-                <div className="flex justify-end space-x-3">
+                <div className="form-actions">
                     <button
                         type="button"
                         onClick={onCancel}
                         disabled={loading}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center disabled:opacity-50"
+                        className="cancel-button"
                     >
-                        <FaTimes className="mr-2"/>
+                        <FaTimes />
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center"
+                        className="submit-button"
                     >
-                        <FaSave className="mr-2" />
+                        <FaSave />
                         {loading ? 'Saving...' : (task ? 'Update Task' : 'Create Task')}
                     </button>
                 </div>
