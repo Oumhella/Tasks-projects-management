@@ -1,5 +1,6 @@
 package com.projectmanager.service.keycloak;
 
+import com.projectmanager.config.KeycloakAdminConfig;
 import jakarta.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
@@ -15,11 +16,13 @@ import java.util.UUID;
 @Service
 public class KeycloakUserService {
     private final Keycloak keycloak;
-    private final String targetRealm;  // Changed from 'realm' to 'targetRealm'
+//    private final String targetRealm;  // Changed from 'realm' to 'targetRealm'
+    private final KeycloakAdminConfig keycloakAdminConfig;
 
-    public KeycloakUserService(Keycloak keycloak, String targetRealm) {
+    public KeycloakUserService(Keycloak keycloak, KeycloakAdminConfig keycloakAdminConfig) {
         this.keycloak = keycloak;
-        this.targetRealm = targetRealm;
+//        this.targetRealm = targetRealm;
+        this.keycloakAdminConfig = keycloakAdminConfig;
     }
 
     public UUID createKeycloakUser(String username, String email, String password, String role) {
@@ -36,20 +39,39 @@ public class KeycloakUserService {
         credential.setTemporary(false);
         user.setCredentials(Collections.singletonList(credential));
 
-        // Create user in target realm
-        try (Response response = keycloak.realm("master").users().create(user)) {
-            if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
-                String location = response.getLocation().getPath();
-                String userId = location.substring(location.lastIndexOf('/') + 1);
+
+        Response resp = keycloak.realm(keycloakAdminConfig.keycloakTargetRealm())
+                .users()
+                .create(user);
+        try (resp) {
+            int status = resp.getStatus();
+            if (status == Response.Status.CREATED.getStatusCode()) {
+                String id = resp.getLocation().getPath();
+                String userId = id.substring(id.lastIndexOf('/') + 1);
+
+                // 3) Map realm role (optional)
+                if (role != null && !role.isBlank()) {
+                    var roles = keycloak.realm(keycloakAdminConfig.keycloakTargetRealm()).roles();
+                    var roleRep = roles.get(role).toRepresentation(); // throws 404 if role doesn't exist
+                    keycloak.realm(keycloakAdminConfig.keycloakTargetRealm())
+                            .users()
+                            .get(userId)
+                            .roles()
+                            .realmLevel()
+                            .add(Collections.singletonList(roleRep));
+                }
+
                 return UUID.fromString(userId);
-            } else {
-                throw new RuntimeException("Failed to create user: " + response.getStatus());
             }
+            if (status == Response.Status.CONFLICT.getStatusCode()) {
+                throw new IllegalStateException("User already exists: " + username);
+            }
+            throw new IllegalStateException("Failed to create user, HTTP " + status);
         }
     }
 
     public void updateKeycloakUser(UUID keycloakId, String newUsername, String newEmail, String newRole) {
-        UserResource userResource = keycloak.realm(targetRealm).users().get(keycloakId.toString());
+        UserResource userResource = keycloak.realm(keycloakAdminConfig.keycloakTargetRealm()).users().get(keycloakId.toString());
         UserRepresentation user = userResource.toRepresentation();
 
         user.setUsername(newUsername);
@@ -61,6 +83,6 @@ public class KeycloakUserService {
 
 
     public void deleteKeycloakUser(UUID keycloakId) {
-        keycloak.realm(targetRealm).users().delete(keycloakId.toString());
+        keycloak.realm(keycloakAdminConfig.keycloakTargetRealm()).users().delete(keycloakId.toString());
     }
 }

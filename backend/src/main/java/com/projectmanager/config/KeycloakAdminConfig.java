@@ -13,20 +13,11 @@ public class KeycloakAdminConfig {
     @Value("${keycloak.auth-server-url}")
     private String serverUrl;
 
-    @Value("${keycloak.target-realm}")  // Use project-manager for operations
+    @Value("${keycloak.target-realm}")
     private String targetRealm;
 
     @Value("${keycloak.client-id}")
     private String clientId;
-
-//    @Value("${keycloak.client-secret}")
-//    private String clientSecret;
-
-    @Value("${keycloak.username}")
-    private String username;
-
-    @Value("${keycloak.password}")
-    private String password;
 
     @Value("${keycloak.client-secret}")
     private String clientSecret;
@@ -35,17 +26,15 @@ public class KeycloakAdminConfig {
     public Keycloak keycloakAdminClient() {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .realm(targetRealm)
+                .realm(targetRealm)  // Same realm for auth and operations
                 .clientId(clientId)
-                .clientSecret(clientSecret)  // Add this
-                .username(username)
-                .password(password)
-                .grantType(OAuth2Constants.PASSWORD)
+                .clientSecret(clientSecret)
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .build();
     }
 
     @Bean
     public String keycloakTargetRealm() {
-        return targetRealm;  // project-manager
+        return targetRealm;
     }
 }

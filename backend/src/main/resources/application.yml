@@ -1,4 +1,54 @@
-#spring.application.name=backend
+##spring.application.name=backend
+#server:
+#  port: 8081
+#
+#spring:
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: http://localhost:8080/realms/project-manager
+##          jwk-set-uri: http://localhost:8080/realms/project-manager/protocol/openid-connect/certs
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/projectmanager
+#    username: postgres
+#    password: root
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#
+#keycloak:
+#  auth-server-url: http://localhost:8080
+#  target-realm: project-manager
+#  client-id: project_manager_client
+#  client-secret: gKQacp2zxQrtm5WyZcU2WwXXcYOKcQBw
+#
+#  #keycloak:
+#  #  auth-server-url: http://localhost:8080
+#  #  admin-realm: master  # Realm for admin authentication
+#  #  target-realm: project-manager  # Target realm for user operations
+#  #  client-id: admin-cli  # Use admin-cli client for admin operations
+#  #  username: admin  # Keycloak admin username
+#  #  password: admin  #
+#
+#  #file:
+#  #  upload-dir: C:/uploads/attachments
+#  #MinIO
+#
+#
+#
+#minio:
+#  url: http://127.0.0.1:9000
+#  accessKey: biti
+#  secretKey: bitibiti
+#  bucketName: project-manager-attachments
+#
+#logging:
+#  level:
+#    org.jboss.resteasy.client.jaxrs: DEBUG
+#    org.keycloak.admin.client: DEBUG
+#    org.apache.http: DEBUG
+#    org.apache.http.wire: DEBUG
 server:
   port: 8081
 
@@ -7,10 +57,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/master
-          jwk-set-uri: http://localhost:8080/realms/master/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8080}/realms/project-manager
   datasource:
-    url: jdbc:postgresql://localhost:5432/projectmanager
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/projectmanager}
     username: postgres
     password: root
   jpa:
@@ -18,19 +67,14 @@ spring:
       ddl-auto: update
 
 keycloak:
-  auth-server-url: http://localhost:8080
-  target-realm: master
-  client-id: admin-cli
-  client-secret: JD2j1t7OTiHHU3glZoSrJcVcsKpzAorT
-  username: admin
-  password: admin
+  auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8080}
+  target-realm: project-manager
+  client-id: project_manager_client
+  client-secret: WVABZGgxKJeK2bMMsiieLwpDm1QYVmxG
 
-#file:
-#  upload-dir: C:/uploads/attachments
-  #MinIO
-
+# MinIO
 minio:
-  url: http://127.0.0.1:9000
+  url: ${MINIO_URL:http://127.0.0.1:9000}
   accessKey: biti
   secretKey: bitibiti
   bucketName: project-manager-attachments

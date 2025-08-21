@@ -51,7 +51,7 @@ interface MyKeycloakConfig {
 const keycloakConfig: MyKeycloakConfig = {
     url: 'http://localhost:8080',
     realm: 'project-manager',
-    clientId: 'project-manager-client',
+    clientId: 'project_manager_client',
 };
 
 // Create ONE instance for the entire app

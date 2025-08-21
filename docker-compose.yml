@@ -1,4 +1,58 @@
-
+#
+#services:
+#  minio:
+#    image: minio/minio
+#    container_name: minio
+#    ports:
+#      - "9000:9000"
+#      - "9090:9090"
+#    environment:
+#      MINIO_ACCESS_KEY: biti
+#      MINIO_SECRET_KEY: bitibiti
+#    volumes:
+#      - minio_data:/data
+#    command: server /data --console-address ":9090"
+#    restart: unless-stopped
+#
+#
+##  keycloak:
+##    image: quay.io/keycloak/keycloak:22.0
+##    environment:
+##      KEYCLOAK_ADMIN: admin
+##      KEYCLOAK_ADMIN_PASSWORD: admin
+##      KC_DB: postgres
+##      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+##      KC_DB_USERNAME: keycloak
+##      KC_DB_PASSWORD: keycloak
+##      KC_LOG_LEVEL: DEBUG # Sets the root log level to DEBUG
+##      KC_LOG_CONSOLE_LEVEL: INFO # Optional: Sets console log level
+##      KC_LOG_FILE_LEVEL: DEBUG # Optional: Sets file log level
+##    ports:
+##      - "8080:8080"
+##    depends_on:
+##      - postgres
+##    command: start-dev
+##    networks:
+##      - keycloak_network
+##
+##  postgres:
+##    image: postgres:15
+##    environment:
+##      POSTGRES_DB: keycloak
+##      POSTGRES_USER: keycloak
+##      POSTGRES_PASSWORD: keycloak
+##    volumes:
+##      - postgres_data:/var/lib/postgresql/data
+##    networks:
+##      - keycloak_network
+#
+#volumes:
+##  postgres_data:
+#  minio_data:
+#
+##networks:
+##  keycloak_network:
+##    driver: bridge
 services:
   minio:
     image: minio/minio
@@ -13,10 +67,12 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9090"
     restart: unless-stopped
-
+    networks:
+      - app_network
 
   keycloak:
-    image: quay.io/keycloak/keycloak:22.0
+    image: quay.io/keycloak/keycloak:24.0.2
+    container_name: keycloak
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -24,24 +80,53 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
-      KC_LOG_LEVEL: DEBUG # Sets the root log level to DEBUG
-      KC_LOG_CONSOLE_LEVEL: INFO # Optional: Sets console log level
-      KC_LOG_FILE_LEVEL: DEBUG # Optional: Sets file log level
+      KC_LOG_LEVEL: DEBUG
+      KC_LOG_CONSOLE_LEVEL: INFO
+      KC_LOG_FILE_LEVEL: DEBUG
+      # Important: Set the hostname for proper URL generation
+      KC_HOSTNAME_URL: http://localhost:8080
+      KC_HOSTNAME_ADMIN_URL: http://localhost:8080
+      KC_HTTP_ENABLED: true
     ports:
       - "8080:8080"
     depends_on:
       - postgres
     command: start-dev
+    networks:
+      - app_network
 
   postgres:
     image: postgres:15
+    container_name: postgres
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: keycloak
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  spring-app:
+    build: ./backend
+    container_name: spring-app
+    ports:
+      - "8081:8081"
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/projectmanager
+      MINIO_URL: http://minio:9000
+    depends_on:
+      - keycloak
+      - postgres
+      - minio
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
   minio_data:
+
+networks:
+  app_network:
+    driver: bridge

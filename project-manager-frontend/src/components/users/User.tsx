@@ -133,7 +133,6 @@ const User: React.FC = () => {
 
         try {
             if (isEditMode && id) {
-                // Update existing user
                 const userUpdateData = {
                     username: formData.username,
                     email: formData.email,
@@ -143,7 +142,6 @@ const User: React.FC = () => {
                 };
                 await apiService.updateUser(id, userUpdateData);
             } else {
-                // Create new user
                 const userCreateData = {
                     username: formData.username,
                     email: formData.email,

@@ -30,12 +30,10 @@ public class ProjectServiceImpl implements ProjectService {
         this.projectMapper = projectMapper;
         this.userService = userService;
     }
-    @PreAuthorize("isAuthenticated()")
     @Override
     public List<ProjectResponse> findAllProjects() {
         return projectRepository.findAll().stream().map(projectMapper::toResponse).collect(Collectors.toList());
     }
-    @PreAuthorize("isAuthenticated()")
 
 
     @Override
@@ -86,7 +84,6 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
 
-    @PreAuthorize("hasAnyRole('admin','project-manager')")
     @Override
     @Transactional
     public void deleteProject(UUID id) {
