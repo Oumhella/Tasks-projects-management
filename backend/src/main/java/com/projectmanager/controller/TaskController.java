@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,8 +58,9 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest request) {
-        return new ResponseEntity<>((taskService.addTask(request)), HttpStatus.CREATED);
+    public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest request, Principal principal) {
+        String creator = principal.getName();
+        return new ResponseEntity<>((taskService.addTask(request, creator)), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

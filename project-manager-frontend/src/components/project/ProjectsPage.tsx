@@ -55,6 +55,7 @@ const ProjectsPage: React.FC = () => {
         setView('edit');
     };
 
+
     const handleViewProject = (project: any) => {
         setSelectedProject(project);
         navigate(`/projects/${project.id}`);
@@ -125,7 +126,7 @@ const ProjectsPage: React.FC = () => {
                                     onClick={() => handleEditProject(selectedProject)}
                                     className="edit-btn"
                                 >
-                                    <FaEdit />
+                                    <FaEdit/>
                                     Edit
                                 </button>
                                 <button
@@ -134,11 +135,12 @@ const ProjectsPage: React.FC = () => {
                                 >
                                     Back to Projects
                                 </button>
+
                             </div>
                         </div>
-                        <ProjectDetail project={selectedProject} />
+                        <ProjectDetail project={selectedProject}/>
                     </div>
-                ): (
+                ) : (
                     <div className="p-6 text-center text-gray-500">Project not found.</div>
                 );
             // case "editTasks":

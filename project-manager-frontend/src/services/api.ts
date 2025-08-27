@@ -1,50 +1,47 @@
-// API Service for backend integration
+import {keycloak} from '../config/Keycloak';
 const API_BASE_URL = 'http://localhost:8081/api/v1';
 
+interface ProjectPulseResponse {
+  sentiment: string;
+  summary: string;
+  actions: string[];
+}
 class ApiService {
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+
+  public async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+
+    await keycloak.updateToken(30);
+    const token = keycloak.token;
+    if (!token) throw new Error("No valid token available");
 
     const config: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
-        // TODO: Add authentication headers when Keycloak is integrated
-        // 'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
       ...options,
     };
 
-    try {
-      const response = await fetch(url, config);
+    const response = await fetch(url, config);
 
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Handle empty responses
-      const text = await response.text();
-      if (!text) {
-        return {} as T;
-      }
-
-      const contentType = response.headers.get('content-type');
-
-      if (contentType && contentType.includes('application/json')) {
-        return JSON.parse(text);
-      } else {
-        // Return plain text as-is (for URLs, etc.)
-        return text as T;
-      }
-    } catch (error) {
-      console.error(`API request failed for ${endpoint}:`, error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    return this.parseResponse<T>(response);
   }
 
+  private async parseResponse<T>(response: Response): Promise<T> {
+      const text = await response.text();
+      if (!text) return {} as T;
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/json'))
+          return JSON.parse(text);
+      return text as unknown as T; }
 
-  // Project endpoints
+    // Project endpoints
   async getProjects(): Promise<any[]> {
     return this.request<any[]>('/projects');
   }
@@ -53,12 +50,29 @@ class ApiService {
     return this.request<any>(`/projects/${id}`);
   }
 
+  async addProjectMember(id: string, user:any): Promise<any> {
+    return this.request<any>(`/projects/${id}/add`, {
+      method: "POST",
+      body: JSON.stringify(user),
+    })
+  }
+
+  async getProjectMembers(id: string | undefined): Promise<any[]> {
+    return this.request<any>(`/projects/${id}/members`);
+  }
+
   async createProject(project: any): Promise<any> {
     return this.request<any>('/projects', {
       method: 'POST',
       body: JSON.stringify(project),
     });
   }
+  async analyzeProject(id: String): Promise<any> {
+    return this.request<any>(`/projects/analyze/${id}`, {
+      method: 'POST',
+    });
+  }
+
 
   async updateProject(id: string, project: any): Promise<any> {
     return this.request<any>(`/projects/${id}`, {
@@ -137,6 +151,7 @@ class ApiService {
     });
   }
 
+
   // Comment endpoints
   async getComments(): Promise<any[]> {
     return this.request<any[]>('/comments');
@@ -190,15 +205,18 @@ class ApiService {
       formData.append('commentId', commentId);
     }
 
+    // Ensure token is up-to-date
+    await keycloak.updateToken(30);
+    const token = keycloak.token;
+    if (!token) throw new Error("No valid token available");
+
     const url = `${API_BASE_URL}/attachments`;
 
     try {
       const response = await fetch(url, {
         method: 'POST',
-        // Don't set Content-Type header - let browser set it for FormData
         headers: {
-          // TODO: Add authentication headers when Keycloak is integrated
-          // 'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -206,9 +224,7 @@ class ApiService {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      //
-      // const text = await response.text();
-      // return text ? JSON.parse(text) : {};
+
       return await response.json();
     } catch (error) {
       console.error('File upload failed:', error);
@@ -227,6 +243,89 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+
+  async getProjectPulse(project: any): Promise<ProjectPulseResponse> {
+    const prompt = `Based on the following project data, provide a "Project Pulse" analysis. This analysis should be a JSON object with three fields: 
+      "sentiment": a single word representing the overall mood (e.g., "Positive", "Stagnant", "Stressed", "Stable"), 
+      "summary": a brief, one-sentence summary of the project's health, and 
+      "actions": a bulleted list of 2-3 actionable recommendations to improve the project's state.
+
+      Project Name: ${project.name}
+      Description: ${project.description}
+      Status: ${project.status}
+      Tasks: ${JSON.stringify(project.tasks, null, 2)}
+      Members: ${project.members.map((member: any) => member.name).join(', ')}
+      Comments: ${JSON.stringify(project.comments, null, 2)}
+      
+      Response format must be a valid JSON object.`;
+
+    const chatHistory = [];
+    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+    const payload = {
+      contents: chatHistory,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            "sentiment": { "type": "STRING" },
+            "summary": { "type": "STRING" },
+            "actions": {
+              "type": "ARRAY",
+              "items": { "type": "STRING" }
+            }
+          }
+        }
+      }
+    };
+    const apiKey = process.env.REACT_APP_SECRET_KEY;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+    const retryFetch = async (url: string, options: RequestInit, retries: number): Promise<Response> => {
+      try {
+        const response = await fetch(url, options);
+        if (response.status === 429 && retries > 0) {
+          const delay = Math.pow(2, 3 - retries) * 1000;
+          console.warn(`Rate limit hit, retrying in ${delay / 1000}s...`);
+          await new Promise(res => setTimeout(res, delay));
+          return retryFetch(url, options, retries - 1);
+        }
+        return response;
+      } catch (error) {
+        if (retries > 0) {
+          const delay = Math.pow(2, 3 - retries) * 1000;
+          console.warn(`Fetch failed, retrying in ${delay / 1000}s...`);
+          await new Promise(res => setTimeout(res, delay));
+          return retryFetch(url, options, retries - 1);
+        }
+        throw error;
+      }
+    };
+
+    try {
+      const response = await retryFetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }, 3);
+
+      const result = await response.json();
+      const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (jsonText) {
+        return JSON.parse(jsonText);
+      }
+      throw new Error("Invalid response from Gemini API");
+
+    } catch (error) {
+      console.error('Gemini API request failed:', error);
+      throw error;
+    }
+  }
+
+
 }
 
 export const apiService = new ApiService();

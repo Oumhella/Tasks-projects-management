@@ -1,0 +1,55 @@
+/* Main container for the entire component */
+.container {
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    border-radius: 0.75rem; /* Rounded corners */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Soft shadow */
+    background-color: #f9fafb; /* Light gray background */
+    overflow: hidden;
+    font-family: 'Inter', sans-serif; /* Using a modern, clean font */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Styling for the main title */
+.title {
+    font-size: 1.5rem; /* 24px */
+    font-weight: 700; /* Bold */
+    margin-bottom: 1rem;
+    color: #374151; /* Dark gray text color */
+}
+
+/* Container for the network graph itself */
+.graph-container {
+    position: relative;
+    width: 100%;
+    min-height: 600px;
+    height: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+/* Message to be displayed when there are no tasks */
+.no-tasks-message {
+    font-size: 1rem;
+    color: #6b7280; /* Gray text color */
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Optional: Additional styles for a better look */
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Ensure the canvas fills its container responsively */
+canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}

@@ -51,10 +51,10 @@ public class CommentController {
 
     @PostMapping
     public ResponseEntity<CommentResponse> createComment(@RequestBody CommentRequest request, Principal principal) {
-//        String username = principal.getName();
+        String username = principal.getName();
 //        UUID tstUserId = UUID.fromString("47f98275-1d5d-45b9-be9d-5e8f78a27b67");
 
-        CommentResponse createdComment = commentService.createComment(request, "47f98275-1d5d-45b9-be9d-5e8f78a27b67");
+        CommentResponse createdComment = commentService.createComment(request, username);
         return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
     }
 

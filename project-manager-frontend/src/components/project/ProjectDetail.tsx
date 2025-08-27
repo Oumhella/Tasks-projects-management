@@ -1,3 +1,4 @@
+// ProjectDetail.tsx - Updated handleAddMember logic
 import React, { useState, useEffect } from 'react';
 import {FaCalendar, FaClock, FaUsers, FaTasks, FaPlus, FaEdit, FaTrash, FaUser, FaEye} from 'react-icons/fa';
 import apiService from "../../services/api";
@@ -6,7 +7,12 @@ import {useNavigate} from "react-router-dom";
 import "./ProjectDetail.css"
 import TaskDetail from "../task/TaskDetail";
 import TaskList from "../task/TaskList";
+import ProjectPulse from "./ProjectPulse";
+import User from "../users/User";
+import Kanban from "../task/Kanban";
+import ProjectNetworkMap from "./ProjectNetworkMap";
 
+// ... keep all your interfaces the same ...
 interface Project {
     id: string;
     name: string;
@@ -17,7 +23,6 @@ interface Project {
     color: string;
     icon: string;
     memberIds: string[];
-
 }
 
 interface Task {
@@ -42,6 +47,7 @@ interface TeamMember {
 interface ProjectDetailProps {
     project: Project;
 }
+
 const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -52,6 +58,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     const [showTaskView, setShowTaskView] = useState(false);
     const [task, setTask] = useState<Task>();
     const [showTaskEdit, setShowTaskEdit] = useState(false);
+    const [showProjectPulse, setShowProjectPulse] = useState(false);
+    const [showUserForm, setShowUserForm] = useState(false);
+    const [showVueKanban, setShowVueKanban] = useState(false);
+    const [showProjectNetwork, setShowProjectNetwork] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -66,12 +76,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
             try {
                 const fetchedTasks = await apiService.getTasksByProjectId(project.id);
                 setTasks(fetchedTasks);
-
-                setTeamMembers([
-                    { id: '1', name: 'John Doe', email: 'john@example.com', role: 'Project Manager' },
-                    { id: '2', name: 'Jane Smith', email: 'jane@example.com', role: 'Developer' },
-                    { id: '3', name: 'Bob Johnson', email: 'bob@example.com', role: 'Designer' }
-                ]);
+                const fetchedMembers = await apiService.getProjectMembers(project.id);
+                setTeamMembers(fetchedMembers);
             } catch (err) {
                 console.error('Error fetching project data:', err);
                 setError('Failed to load project details. Please try again.');
@@ -116,31 +122,45 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
         }
     };
 
-    // useEffect(() => {
-        const handleViewTask = (task: React.SetStateAction<Task | undefined>) => {
-            setShowTaskView(true);
-            setTask(task);
-            return task;
-        }
-    //     handleViewTask(task);
-    // }, [task]);
+    const handleViewTask = (task: React.SetStateAction<Task | undefined>) => {
+        setShowTaskView(true);
+        setTask(task);
+        return task;
+    }
 
-    const handleDeleteTask = async (id: string) =>{
-           if(window.confirm("are you sure you want to delete this task?")) {
-               setLoading(true);
-               try {
-                   await apiService.deleteTask(id);
-                   setTasks(prev => prev.filter(task => task.id !== id));
-               } catch (error) {
-                   console.error("Error deleting task", error);
-                   setError("Failed to delete task");
-               }finally{
-                   setLoading(false);
-               }
-           }
+    const handleDeleteTask = async (id: string) => {
+        if(window.confirm("are you sure you want to delete this task?")) {
+            setLoading(true);
+            try {
+                await apiService.deleteTask(id);
+                setTasks(prev => prev.filter(task => task.id !== id));
+            } catch (error) {
+                console.error("Error deleting task", error);
+                setError("Failed to delete task");
+            }finally{
+                setLoading(false);
+            }
+        }
     }
 
     const handleAddTask = () => setShowTaskForm(true);
+
+    const handleAddMember = () => setShowUserForm(true);
+
+    const handleMemberAdded = async () => {
+        setShowUserForm(false);
+
+        try {
+            const fetchedMembers = await apiService.getProjectMembers(project.id);
+            setTeamMembers(fetchedMembers);
+
+            console.log('Member added successfully');
+        } catch (err) {
+            console.error('Error refreshing team members:', err);
+        }
+    };
+
+    const handleUserFormCancel = () => setShowUserForm(false);
 
     const handleTaskSaved = async () => {
         setShowTaskForm(false);
@@ -149,6 +169,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
             setTasks(fetchedTasks);
         } catch (err) { console.error(err); }
     };
+
     const handleTaskFormCancel = () => setShowTaskForm(false);
 
     const handleEditTask = (task: React.SetStateAction<Task | undefined>) => {
@@ -163,8 +184,19 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
             setTasks(fetchedTasks);
         } catch (err) { console.error(err); }
     };
+
     const handleTaskEditCancel = () => setShowTaskEdit(false);
 
+    const handleProjectPulse = () => {
+        setShowProjectPulse(true);
+    }
+
+    const handleVueKanban = () =>{
+        setShowVueKanban(true);
+    }
+    const handleProjectNetwork = () =>{
+        setShowProjectNetwork(true);
+    }
 
     if (loading) return <div className="loading">Loading tasks and team members...</div>;
 
@@ -179,29 +211,63 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     if(showTaskView)
         return <TaskDetail task={task} />
 
+    if (showProjectPulse){
+        return <ProjectPulse project={project}/>;
+    }
+
+    if(showUserForm){
+        return (
+            <User
+                project={project}
+                onMemberAdded={handleMemberAdded}
+                onCancel={handleUserFormCancel}
+            />
+        );
+    }
+
+    if (showVueKanban){
+        return <Kanban project={project} />
+    }
+    if (showProjectNetwork){
+        return <ProjectNetworkMap project={project} />
+    }
+
     return (
         <div className="project-detail">
             <div className="project-header">
-                <div className="project-icon" style={{ backgroundColor: project.color }}>{project.icon}</div>
+                <div className="project-icon" style={{backgroundColor: project.color}}>{project.icon}</div>
                 <div>
                     <h1 className="project-title">{project.name}</h1>
                     <span className={`project-status ${getStatusColor(project.status)}`}>
                         {getStatusLabel(project.status)}
                     </span>
+                    <button
+                        onClick={handleProjectPulse}
+                        className="edit-btn"
+                    >
+                        Project pulse
+                    </button>
                 </div>
             </div>
             <p className="project-description">{project.description}</p>
 
             <div className="project-info">
-                <div><FaCalendar /> Start: {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}</div>
-                <div><FaClock /> End: {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}</div>
-                <div><FaUsers /> Team: {teamMembers.length}</div>
+                <div>
+                    <FaCalendar/> Start: {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}
+                </div>
+                <div><FaClock/> End: {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}
+                </div>
+                <div><FaUsers/> Team: {teamMembers.length}</div>
             </div>
+
+            <button onClick={handleVueKanban}><FaEye/> Vue Kanban</button>
+
+            <button onClick={handleProjectNetwork}><FaEye/> Vue Network</button>
 
             <div className="project-tasks">
                 <div className="tasks-header">
-                    <h3><FaTasks /> Project Tasks ({tasks.length})</h3>
-                    <button onClick={handleAddTask}><FaPlus /> Add Task</button>
+                    <h3><FaTasks/> Project Tasks ({tasks.length})</h3>
+                    <button onClick={handleAddTask}><FaPlus/> Add Task</button>
                 </div>
                 <table className="tasks-table">
                     <thead>
@@ -221,12 +287,14 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                                 <div className="task-title">{task.title}</div>
                                 <div className="task-desc">{task.description}</div>
                             </td>
-                            <td><span className={`task-badge ${getStatusColor(task.status)}`}>{getStatusLabel(task.status)}</span></td>
-                            <td><span className={`task-badge ${getPriorityColor(task.priority)}`}>{task.priority}</span></td>
+                            <td><span
+                                className={`task-badge ${getStatusColor(task.status)}`}>{getStatusLabel(task.status)}</span>
+                            </td>
+                            <td><span className={`task-badge ${getPriorityColor(task.priority)}`}>{task.priority}</span>
+                            </td>
                             <td><span className={`task-badge ${getTypeColor(task.type)}`}>{task.type}</span></td>
                             <td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</td>
                             <td className="task-actions">
-                                {/*<button onClick={() => handleViewTask(task)}><FaEdit /></button>*/}
                                 <button onClick={() => handleViewTask(task)}><FaEye/></button>
                                 <button onClick={() => handleEditTask(task)}><FaEdit/></button>
                                 <button onClick={() => handleDeleteTask(task.id)}><FaTrash/></button>
@@ -239,19 +307,19 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
 
             <div className="project-team">
                 <div className="team-header">
-                    <h3><FaUsers /> Team Members ({teamMembers.length})</h3>
-                    <button><FaPlus /> Add Member</button>
+                    <h3><FaUsers/> Team Members ({teamMembers.length})</h3>
+                    <button onClick={handleAddMember}><FaPlus/> Add Member</button>
                 </div>
                 <div className="team-grid">
                     {teamMembers.map(member => (
                         <div key={member.id} className="team-member">
-                            <div className="member-avatar"><FaUser /></div>
+                            <div className="member-avatar"><FaUser/></div>
                             <div className="member-info">
                                 <h4>{member.name}</h4>
                                 <p>{member.email}</p>
                                 <p className="member-role">{member.role}</p>
                             </div>
-                            <button className="edit-member"><FaEdit /></button>
+                            <button className="edit-member"><FaEdit/></button>
                         </div>
                     ))}
                 </div>

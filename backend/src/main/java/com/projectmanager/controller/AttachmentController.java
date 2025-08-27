@@ -60,9 +60,9 @@ public class AttachmentController {
         request.setFile(file);
         request.setTaskId(taskId);
         request.setCommentId(commentId);
-        UUID tstUserId = UUID.fromString("47f98275-1d5d-45b9-be9d-5e8f78a27b67");
-//        request.setUploadedByUserId(UUID.fromString(principal.getName()));
-        request.setUploadedByUserId(tstUserId);
+//        UUID tstUserId = UUID.fromString("47f98275-1d5d-45b9-be9d-5e8f78a27b67");
+        request.setUploadedByUserId(UUID.fromString(principal.getName()));
+//        request.setUploadedByUserId(tstUserId);
         AttachmentResponse response = attachmentService.uploadAttachment(request);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);

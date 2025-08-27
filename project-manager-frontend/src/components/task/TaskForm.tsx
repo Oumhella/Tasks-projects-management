@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import apiService from "../../services/api";
-import './TaskForm.css'; // Import the CSS file
+import './TaskForm.css';
 
 interface TaskFormProps {
     task?: any;
@@ -9,7 +9,6 @@ interface TaskFormProps {
     readOnlyProject?: boolean;
     onSave: () => void;
     onCancel: () => void;
-    // isEdit?: boolean;
 }
 
 interface TaskFormData {
@@ -24,7 +23,7 @@ interface TaskFormData {
     assignedToUserId: string;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, onSave, onCancel}) => {
+const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, onSave, onCancel }) => {
     const [formData, setFormData] = useState<TaskFormData>({
         title: '',
         description: '',
@@ -38,7 +37,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
     });
 
     const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([]);
-    const [users, setUsers] = useState<Array<{ id: string; name: string }>>([]);
+    const [users, setUsers] = useState<Array<{ id: string; name: string; email?: string }>>([]);
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
     const [error, setError] = useState('');
@@ -49,10 +48,26 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
             setError('');
 
             try {
-                const [projectsData, usersData] = await Promise.all([
-                    apiService.getProjects(),
-                    apiService.getUsers()
-                ]);
+                let projectsData = [];
+                let usersData = [];
+
+                if (readOnlyProject && projectId) {
+                    const [projectResponse, membersResponse] = await Promise.all([
+                        apiService.getProject(projectId),
+                        apiService.getProjectMembers(projectId).catch(() => [])
+                    ]);
+
+                    projectsData = [projectResponse];
+                    usersData = membersResponse;
+                } else {
+                    const [projectsResponse, usersResponse] = await Promise.all([
+                        apiService.getProjects(),
+                        apiService.getUsers().catch(() => [])
+                    ]);
+
+                    projectsData = projectsResponse;
+                    usersData = usersResponse;
+                }
 
                 setProjects(projectsData);
                 setUsers(usersData);
@@ -80,7 +95,30 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
         };
 
         fetchInitialData();
-    }, [task, projectId]);
+    }, [task, projectId, readOnlyProject]);
+
+    useEffect(() => {
+        const fetchProjectMembers = async () => {
+            if (formData.projectId && !readOnlyProject) {
+                try {
+                    const members = await apiService.getProjectMembers(formData.projectId);
+                    setUsers(members);
+                } catch (err) {
+                    console.error('Error fetching project members:', err);
+                    try {
+                        const allUsers = await apiService.getUsers();
+                        setUsers(allUsers);
+                    } catch (fallbackErr) {
+                        console.error('Error fetching all users:', fallbackErr);
+                    }
+                }
+            }
+        };
+
+        if (formData.projectId && !readOnlyProject) {
+            fetchProjectMembers();
+        }
+    }, [formData.projectId, readOnlyProject]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -162,6 +200,20 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
         );
     }
 
+    const getCurrentProjectName = () => {
+        const currentProject = projects.find(p => p.id === formData.projectId);
+        return currentProject ? currentProject.name : 'Loading...';
+    };
+
+    const getUserDisplayName = (user: any) => {
+        if (user.name) return user.name;
+        if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
+        if (user.firstName) return user.firstName;
+        if (user.username) return user.username;
+        if (user.email) return user.email;
+        return 'Unknown User';
+    };
+
     return (
         <div className="task-form-container">
             {error && (
@@ -190,6 +242,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                 </div>
             )}
 
+            <div className="task-form-header">
+                <h2>{task ? 'Edit Task' : 'Create New Task'}</h2>
+                {readOnlyProject && projectId && (
+                    <p className="project-context">Creating task for: <strong>{getCurrentProjectName()}</strong></p>
+                )}
+            </div>
+
             <form onSubmit={handleSubmit} className="task-form">
                 <div className="form-grid">
                     <div className="form-group">
@@ -212,10 +271,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                             Project *
                         </label>
                         {readOnlyProject && projectId ? (
-                            <div className="form-group">
+                            <div>
                                 <input
                                     type="text"
-                                    value={projects.find(p => p.id === formData.projectId)?.name || 'Loading...'}
+                                    value={getCurrentProjectName()}
                                     disabled
                                     className="form-input"
                                 />
@@ -298,6 +357,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                     <div className="form-group">
                         <label className="form-label">
                             Assigned To
+                            {readOnlyProject && (
+                                <span className="label-note"> (Project Members Only)</span>
+                            )}
                         </label>
                         <select
                             name="assignedToUserId"
@@ -308,10 +370,16 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                             <option value="">Unassigned</option>
                             {users.map((user) => (
                                 <option key={user.id} value={user.id}>
-                                    {user.name}
+                                    {getUserDisplayName(user)}
+                                    {user.email && ` (${user.email})`}
                                 </option>
                             ))}
                         </select>
+                        {users.length === 0 && formData.projectId && (
+                            <p className="no-members-note">
+                                No members found for this project. Add members to assign tasks.
+                            </p>
+                        )}
                     </div>
 
                     <div className="form-group">

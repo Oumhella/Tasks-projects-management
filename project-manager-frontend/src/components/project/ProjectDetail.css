@@ -174,7 +174,11 @@ button:hover {
     padding: 0.5rem;
     border-radius: 50%;
 }
-
+.edit-btn{
+    color: #6c757d;
+    padding: 0.5rem;
+    border-radius: 50%;
+}
 .task-actions button:hover {
     background-color: #f1f1f1;
     color: #495057;

@@ -12,7 +12,7 @@ interface LinkItem {
 
 const Sidebar: React.FC = () => {
     const links: LinkItem[] = [
-        { to: "/", label: "Dashboard", icon: FaTachometerAlt },
+        { to: "/dashboard", label: "Dashboard", icon: FaTachometerAlt },
         { to: "/projects", label: "Projects", icon: FaProjectDiagram },
         { to: "/tasks", label: "Tasks", icon: FaTasks },
         { to: "/users", label: "Users", icon: FaUsers },

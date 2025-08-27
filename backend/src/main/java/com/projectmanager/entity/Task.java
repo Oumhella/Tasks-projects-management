@@ -1,5 +1,5 @@
 package com.projectmanager.entity;
-import com.projectmanager.listener.task.TaskActivityListener;
+//import com.projectmanager.listener.task.TaskActivityListener;
 import com.projectmanager.model.task.TaskPriority;
 import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.model.task.TaskType;
@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 
-@EntityListeners(TaskActivityListener.class)
+//@EntityListeners(TaskActivityListener.class)
 
 @Entity
 @Table(name = "tasks")

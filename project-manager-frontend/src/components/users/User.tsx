@@ -1,8 +1,15 @@
+// User.tsx - Updated version
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaSave, FaTimes, FaUser, FaEnvelope, FaKey, FaUserTag } from 'react-icons/fa';
 import './user.css';
 import apiService from "../../services/api";
+
+interface UserProps {
+    project?: any;
+    onMemberAdded?: () => void; // Callback for when member is successfully added
+    onCancel?: () => void; // Callback for cancel action
+}
 
 interface UserFormData {
     username: string;
@@ -13,6 +20,7 @@ interface UserFormData {
     lastName: string;
     role: string;
 }
+
 interface User {
     name: string;
     email: string;
@@ -22,7 +30,8 @@ interface User {
     lastName: string;
     role: string;
 }
-const User: React.FC = () => {
+
+const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [formData, setFormData] = useState<UserFormData>({
@@ -39,19 +48,22 @@ const User: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Partial<UserFormData>>({});
     const [isEditMode, setIsEditMode] = useState(false);
+    const [isProjectContext, setIsProjectContext] = useState(false);
 
     useEffect(() => {
+        // Determine if we're in project context (adding member to project)
+        setIsProjectContext(!!project);
+
         const fetchUserData = async () => {
-            if (id) {
+            if (id && !project) { // Only fetch user data if editing existing user (not adding to project)
                 setIsEditMode(true);
                 try {
                     setLoading(true);
                     const userData = await apiService.getUser(id);
-                    // Populate form with fetched data
                     setFormData({
                         username: userData.username,
                         email: userData.email,
-                        password: '', // Passwords are not fetched for security reasons
+                        password: '',
                         confirmPassword: '',
                         firstName: userData.firstName,
                         lastName: userData.lastName,
@@ -59,7 +71,6 @@ const User: React.FC = () => {
                     });
                 } catch (error) {
                     console.error('Failed to fetch user data:', error);
-                    // Navigate to the user list or show an error message
                     navigate('/users');
                 } finally {
                     setLoading(false);
@@ -68,8 +79,7 @@ const User: React.FC = () => {
         };
 
         fetchUserData();
-    }, [id, navigate]);
-
+    }, [id, navigate, project]);
 
     const validateForm = (): boolean => {
         const newErrors: Partial<UserFormData> = {};
@@ -116,7 +126,6 @@ const User: React.FC = () => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
 
-        // Clear error when user starts typing
         if (errors[name as keyof UserFormData]) {
             setErrors(prev => ({ ...prev, [name]: undefined }));
         }
@@ -132,7 +141,24 @@ const User: React.FC = () => {
         setLoading(true);
 
         try {
-            if (isEditMode && id) {
+            if (isProjectContext && project) {
+                // Adding member to project
+                const memberData = {
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    role: formData.role
+                };
+                await apiService.addProjectMember(project.id, memberData);
+
+                // Call callback if provided, otherwise stay in project context
+                if (onMemberAdded) {
+                    onMemberAdded();
+                }
+            } else if (isEditMode && id) {
+                // Editing existing user
                 const userUpdateData = {
                     username: formData.username,
                     email: formData.email,
@@ -141,7 +167,9 @@ const User: React.FC = () => {
                     role: formData.role
                 };
                 await apiService.updateUser(id, userUpdateData);
+                navigate('/users');
             } else {
+                // Creating new user
                 const userCreateData = {
                     username: formData.username,
                     email: formData.email,
@@ -151,16 +179,24 @@ const User: React.FC = () => {
                     role: formData.role
                 };
                 await apiService.createUser(userCreateData);
+                navigate('/users');
             }
-            navigate('/users');
         } catch (error) {
             console.error('Error saving user:', error);
-            // Handle error, e.g., show an error message on the form
             setErrors({ email: 'Failed to save user. Please try again.' });
         } finally {
             setLoading(false);
         }
     };
+
+    const handleCancel = () => {
+        if (isProjectContext && onCancel) {
+            onCancel(); // Use callback if in project context
+        } else {
+            navigate('/users'); // Default navigation for user management
+        }
+    };
+
     const roleOptions = [
         { value: 'admin', label: 'Administrator', description: 'Full system access' },
         { value: 'project-manager', label: 'Project Manager', description: 'Manage projects and teams' },
@@ -170,7 +206,7 @@ const User: React.FC = () => {
         { value: 'viewer', label: 'Viewer', description: 'Read-only access' }
     ];
 
-    if (isEditMode && loading) {
+    if (isEditMode && loading && !isProjectContext) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -178,16 +214,24 @@ const User: React.FC = () => {
         );
     }
 
+    const getTitle = () => {
+        if (isProjectContext) return `Add Member to ${project.name}`;
+        if (isEditMode) return 'Edit User';
+        return 'Create New User';
+    };
+
+    const getSubtitle = () => {
+        if (isProjectContext) return 'Add a new member to this project';
+        if (isEditMode) return 'Update user information';
+        return 'Add a new user to the system';
+    };
+
     return (
         <div className="user-container">
             <div className="user-card">
                 <div className="user-header">
-                    <h1 className="user-title">
-                        {isEditMode ? 'Edit User' : 'Create New User'}
-                    </h1>
-                    <p className="user-subtitle">
-                        {isEditMode ? 'Update user information' : 'Add a new user to the system'}
-                    </p>
+                    <h1 className="user-title">{getTitle()}</h1>
+                    <p className="user-subtitle">{getSubtitle()}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="user-form">
@@ -330,7 +374,7 @@ const User: React.FC = () => {
                     <div className="form-actions">
                         <button
                             type="button"
-                            onClick={() => navigate('/users')}
+                            onClick={handleCancel}
                             className="cancel-btn"
                             disabled={loading}
                         >
@@ -343,7 +387,10 @@ const User: React.FC = () => {
                             disabled={loading}
                         >
                             <FaSave />
-                            {loading ? 'Saving...' : (isEditMode ? 'Update User' : 'Create User')}
+                            {loading ? 'Saving...' : (
+                                isProjectContext ? 'Add Member' :
+                                    isEditMode ? 'Update User' : 'Create User'
+                            )}
                         </button>
                     </div>
                 </form>

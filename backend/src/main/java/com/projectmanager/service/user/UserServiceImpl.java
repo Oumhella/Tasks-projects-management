@@ -3,6 +3,7 @@ package com.projectmanager.service.user;
 import com.projectmanager.dto.request.UserRequest;
 import com.projectmanager.dto.request.UserUpdateRequest;
 import com.projectmanager.dto.response.UserResponse;
+import com.projectmanager.entity.Project;
 import com.projectmanager.entity.User;
 import jakarta.persistence.EntityNotFoundException;
 import com.projectmanager.mapper.UserMapper;
@@ -84,4 +85,17 @@ public class UserServiceImpl implements UserService {
     public List<User> getUsersByIds(Set<UUID> userIds) {
         return userRepository.findAllById(userIds);
     }
+
+    @Override
+    public Optional<User> findByKey(UUID key) {
+        return userRepository.findByKeycloakId(key);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<UserResponse> getProjectMembers(UUID projectId) {
+        Set<User> members = userRepository.findMembersByProject_Id(projectId);
+        return members.stream().map(userMapper::toResponse).collect(Collectors.toSet());
+    }
+
 }

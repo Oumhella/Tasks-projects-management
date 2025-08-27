@@ -78,7 +78,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             attachment.setComment(comment);
         }
         if (request.getUploadedByUserId() != null) {
-            User user = userService.getUserById(request.getUploadedByUserId())
+            User user = userService.findByKey(request.getUploadedByUserId())
                     .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + request.getUploadedByUserId()));
             attachment.setUploadedBy(user);
         }

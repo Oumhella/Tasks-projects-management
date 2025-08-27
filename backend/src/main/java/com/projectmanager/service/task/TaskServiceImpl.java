@@ -64,23 +64,22 @@ public List<TaskResponse> getTasks() {
             .collect(Collectors.toList());
 }
 
-    @PreAuthorize("permitAll()")
-    @Override
-    public Optional<Task> getTask(UUID id) {
-       return taskRepository.findById(id);
-    }
+@PreAuthorize("hasAnyRole('admin','project-manager', 'developer')")
+@Override
+public Optional<Task> getTask(UUID id) {
+   return taskRepository.findById(id);
+}
 
-    @PreAuthorize("isAuthenticated()")
-    @Override
-    public List<TaskResponse> getTasksByStatus(TaskStatus status) {
-        return taskRepository.findByStatus(status).stream().map(taskMapper::toResponse).collect(Collectors.toList());
-    }
+@PreAuthorize("hasAnyRole('admin', 'project-manager', 'developer', 'observer')")
+@Override
+public List<TaskResponse> getTasksByStatus(TaskStatus status) {
+    return taskRepository.findByStatus(status).stream().map(taskMapper::toResponse).collect(Collectors.toList());
+}
 
-//    @PreAuthorize("hasAnyRole('admin','project-manager')")
 @PreAuthorize("hasAnyRole('admin','project-manager')")
 @Override
 @Transactional
-public TaskResponse addTask(TaskRequest request) {
+public TaskResponse addTask(TaskRequest request, String userId) {
 if (request == null || request.getProjectId() == null) {
     throw new IllegalArgumentException("Invalid task request");
 }
@@ -91,13 +90,16 @@ newTask.setStatus(TaskStatus.TODO);
 newTask.setUpdatedAt(LocalDateTime.now());
 newTask.setProject(projectService.findProjectById(request.getProjectId())
         .orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + request.getProjectId())));
-
+newTask.setAssignedTo(userService.getUserById(request.getAssignedToUserId())
+        .orElseThrow(()->new EntityNotFoundException("User not found with ID: " + request.getAssignedToUserId())));
 Task createdTask = taskRepository.save(newTask);
-
+UUID creator = UUID.fromString(userId);
+newTask.setCreatedBy(userService.findByKey(creator).
+        orElseThrow(()-> new EntityNotFoundException("User not found with ID:" + creator)));
     return taskMapper.toResponse(createdTask);
 }
 
-@PreAuthorize("hasAnyRole('admin','project-manager')")
+@PreAuthorize("hasAnyRole('admin','project-manager', 'developer')")
 @Override
 @Transactional
 public TaskResponse updateTask(UUID id, TaskRequest request) {
@@ -134,10 +136,10 @@ public void deleteTask(UUID id) {
     taskRepository.deleteById(id);
 }
 
-    @Override
-    @Transactional(readOnly = true) // Use a read-only transaction for fetching
-    public List<TaskResponse> getTasksByProjectId(UUID projectId) {
-       List<Task> tasks = taskRepository.findTaskByProjectId(projectId);
-        return tasks.stream().map(taskMapper::toResponse).collect(Collectors.toList());
-    }
+@Override
+@Transactional(readOnly = true)
+public List<TaskResponse> getTasksByProjectId(UUID projectId) {
+   List<Task> tasks = taskRepository.findTaskByProjectId(projectId);
+    return tasks.stream().map(taskMapper::toResponse).collect(Collectors.toList());
+}
 }

@@ -67,7 +67,7 @@ public class CommentServiceImpl implements CommentService{
         Comment comment = commentMapper.toEntity(request);
 
         UUID user_Id = UUID.fromString(userId);
-        User user = userService.getUserById(user_Id)
+        User user = userService.findByKey(user_Id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_Id));
         comment.setUser(user);
 

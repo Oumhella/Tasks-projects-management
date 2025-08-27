@@ -1,0 +1,82 @@
+.project-pulse-container {
+    background-color: white;
+    padding: 1.5rem; /* 24px */
+    border-radius: 0.5rem; /* 8px */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+    max-width: 32rem; /* max-w-lg */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2.5rem; /* mt-10 */
+    font-family: sans-serif; /* A good default for modern design */
+}
+
+.project-pulse-header {
+    font-size: 1.5rem; /* 24px */
+    font-weight: bold;
+    margin-bottom: 1rem; /* 16px */
+    text-align: center;
+    color: #1f2937; /* gray-800 */
+}
+
+.loading-message,
+.error-message {
+    text-align: center;
+    padding: 1rem;
+    font-weight: bold;
+    font-size: 1.125rem;
+}
+
+.error-message {
+    color: #ef4444; /* red-500 */
+}
+
+.sentiment-section {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.sentiment-label {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 600;
+    color: #4b5563; /* gray-600 */
+    text-transform: uppercase;
+    display: block;
+}
+
+.sentiment-value {
+    font-size: 3rem; /* 48px */
+    font-weight: 800;
+}
+
+.summary-text {
+    font-size: 1.125rem; /* 18px */
+    color: #374151; /* gray-700 */
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.insights-box {
+    background-color: #f3f4f6; /* gray-100 */
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.insights-header {
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1f2937; /* gray-800 */
+}
+
+.insights-list {
+    list-style: disc;
+    list-style-position: inside;
+    padding-left: 0;
+    line-height: 1.5;
+    color: #4b5563; /* gray-600 */
+}
+
+.insights-list li {
+    margin-bottom: 0.25rem;
+}
+

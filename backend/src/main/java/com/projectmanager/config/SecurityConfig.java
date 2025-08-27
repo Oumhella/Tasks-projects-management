@@ -109,20 +109,24 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.oauth2.jwt.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * Spring Security configuration for a Resource Server using JWT.
- * This class configures the application to accept JWTs issued by a Keycloak server.
- * It maps Keycloak roles from the 'realm_access.roles' claim to Spring Security authorities.
- */
 @Configuration
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -134,11 +138,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                                .anyRequest().permitAll()
-                        // .requestMatchers(HttpMethod.GET, "/api/hello").permitAll()
-                        // .requestMatchers("/api/v1/admin/**").hasRole("admin")
-                        // .requestMatchers("/api/v1/projects/**").hasAnyRole("admin", "project-manager")
-                        // .requestMatchers("/api/v1/tasks/**").hasAnyRole("project-manager", "developer")
+                                .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
@@ -152,14 +152,17 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
-        converter.setAuthoritiesClaimName("realm_access.roles");
-        converter.setAuthorityPrefix("ROLE_");
-
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-        jwtConverter.setJwtGrantedAuthoritiesConverter(converter);
-        return jwtConverter;
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            List<String> roles = ((Map<String, Object>) jwt.getClaim("realm_access"))
+                    .get("roles") instanceof List<?> l ? (List<String>) l : List.of();
+            return roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(Collectors.toList());
+        });
+        return converter;
     }
+
 
 
     @Bean
@@ -174,45 +177,25 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-}
 
-////
-////import org.springframework.context.annotation.Bean;
-////import org.springframework.context.annotation.Configuration;
-////import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-////import org.springframework.security.web.SecurityFilterChain;
-////import org.springframework.web.cors.CorsConfiguration;
-////import org.springframework.web.cors.CorsConfigurationSource;
-////import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-////
-////import java.util.List;
-////
-////@Configuration
-////
-////public class SecurityConfig {
-////
-////    @Bean
-////    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-////        http
-////                .csrf(csrf -> csrf.disable())
-////                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-////                .authorizeHttpRequests(auth -> auth
-////                        .anyRequest().permitAll() // Allow all requests for testing
-////                );
-////
-////        return http.build();
-////    }
-////
-////    @Bean
-////    public CorsConfigurationSource corsConfigurationSource() {
-////        CorsConfiguration config = new CorsConfiguration();
-////        config.setAllowedOrigins(List.of("http://localhost:3000"));
-////        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-////        config.setAllowedHeaders(List.of("*"));
-////        config.setAllowCredentials(true);
-////
-////        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-////        source.registerCorsConfiguration("/**", config);
-////        return source;
-////    }
-////}
+//    @Bean
+//    public JwtDecoder jwtDecoder() {
+//        NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(
+//                "http://localhost:8080/realms/project-manager"
+//        );
+//
+//        OAuth2TokenValidator<Jwt> withAudience = new JwtClaimValidator<List<String>>(
+//                "aud",
+//                aud -> aud.contains("project_manager_client")
+//        );
+//
+//        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(
+//                "http://localhost:8080/realms/project-manager"
+//        );
+//
+//        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience);
+//        jwtDecoder.setJwtValidator(validator);
+//
+//        return jwtDecoder;
+//    }
+}

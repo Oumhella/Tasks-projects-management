@@ -45,6 +45,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [projectName, setProjectName] = useState<string>("");
+    const [assignedUserName, setAssignedUserName] = useState<string>("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,6 +71,43 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
         fetchData();
     }, [task]);
 
+    useEffect(() => {
+        const fetchProjectName = async () => {
+            if (task?.projectId) {
+                try {
+                    const proj = await apiService.getProject(task.projectId);
+                    setProjectName(proj.name || "Unknown Project");
+                } catch (error) {
+                    console.error("Error fetching project", error);
+                    setProjectName("Unknown Project");
+                }
+            }
+        };
+        fetchProjectName();
+    }, [task?.projectId]);
+
+    useEffect(() => {
+        const fetchAssignedUser = async () => {
+            if (task?.assignedToUserId) {
+                try {
+                    const user = await apiService.getUser(task.assignedToUserId);
+                    const userName = user.name ||
+                        (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : '') ||
+                        user.firstName ||
+                        user.username ||
+                        user.email ||
+                        'Unknown User';
+                    setAssignedUserName(userName);
+                } catch (error) {
+                    console.error("Error fetching assigned user", error);
+                    setAssignedUserName("Unknown User");
+                }
+            } else {
+                setAssignedUserName("");
+            }
+        };
+        fetchAssignedUser();
+    }, [task?.assignedToUserId]);
     const handleAddComment = async () => {
         if (!newComment.trim()) return;
 
@@ -210,14 +248,21 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
 
                 <div className="info-grid">
                     <div><FaProjectDiagram/> Project: {projectName || "Loading..."}</div>
-                    <div><FaUser /> Assigned: {task.assignedToUserId || 'Unassigned'}</div>
-                    <div><FaClock /> Est. Hours: {task.estimatedHours}h</div>
-                    <div><FaCalendar /> Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</div>
+                    <div>
+                        <FaUser/> Assigned: {
+                        task.assignedToUserId ?
+                            (assignedUserName || "Loading...") :
+                            "Unassigned"
+                    }
+                    </div>
+                    <div><FaClock/> Est. Hours: {task.estimatedHours}h</div>
+                    <div><FaCalendar/> Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                    </div>
                 </div>
             </div>
 
             <div className="card">
-                <h3><FaComments /> Comments ({comments.length})</h3>
+                <h3><FaComments/> Comments ({comments.length})</h3>
                 <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
