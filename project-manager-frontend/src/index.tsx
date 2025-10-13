@@ -5,6 +5,11 @@ import App from './App';
 import './index.css';
 import {ReactKeycloakProvider} from "@react-keycloak/web";
 import {initOptions, keycloak} from "./config/Keycloak";
+import { registerLicense } from '@syncfusion/ej2-base';
+
+registerLicense(process.env.REACT_APP_SYNCFUSION_LICENSE || '');
+
+
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 

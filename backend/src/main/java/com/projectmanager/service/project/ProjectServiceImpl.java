@@ -88,8 +88,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project project = projectRepository.findById(projectId).orElseThrow(()-> new EntityNotFoundException("Project not found with ID: " + projectId));
 
-        UUID keycloakId = keycloakUserService.createKeycloakUser(request.getUsername(), request.getEmail(), request.getPassword(), request.getRole());
+//        UUID keycloakId = keycloakUserService.createKeycloakUser(request.getUsername(), request.getEmail(), request.getPassword(), request.getRole());
 
+        UUID keycloakId = keycloakUserService.inviteUser(request.getUsername(), request.getEmail(), request.getRole());
         User user = userMapper.toEntity(request);
         user.setKeycloakId(keycloakId);
         user.setCreatedAt(LocalDateTime.now());
@@ -128,4 +129,10 @@ public class ProjectServiceImpl implements ProjectService {
             throw new EntityNotFoundException("Project not found with ID: " + id);
         }
         projectRepository.deleteById(id);
-    }}
+    }
+
+    @Override
+    public List<Project> findProjectsByUserId(UUID userId) {
+        return projectRepository.findByMember_Id(userId);
+    }
+}

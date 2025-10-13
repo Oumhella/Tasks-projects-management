@@ -1,38 +1,68 @@
-.App {
-  text-align: center;
+/* App Component Specific Styles */
+/* Main layout is now handled in index.css */
+
+/* Utility Classes */
+.grid-1 { 
+  display: grid; 
+  grid-template-columns: 1fr; 
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.grid-2 { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.grid-3 { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+}
+
+.grid-4 { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+}
+
+.grid-gap { 
+  gap: var(--space-6); 
+}
+
+.grid-gap-sm { 
+  gap: var(--space-4); 
+}
+
+.grid-gap-lg { 
+  gap: var(--space-8); 
+}
+
+/* Responsive grid utilities */
+@media (max-width: 1024px) {
+  .grid-4 { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+  
+  .grid-3 { 
+    grid-template-columns: repeat(2, 1fr); 
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+@media (max-width: 768px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
   }
-  to {
-    transform: rotate(360deg);
+}
+
+@media (max-width: 640px) {
+  .content-wrapper {
+    padding: var(--space-2) var(--space-3);
+  }
+  
+  .page-header {
+    margin-bottom: var(--space-6);
+  }
+  
+  .page-title {
+    font-size: var(--text-xl);
   }
 }

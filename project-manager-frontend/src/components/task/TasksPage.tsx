@@ -5,12 +5,36 @@ import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
 import './TasksPage.css';
+import apiService from "../../services/api";
 
+interface User {
+    id: string;
+    username: string;
+    role: 'admin' | 'project-manager' | 'developer' | 'observator';
+
+}
 const TasksPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [view, setView] = useState<'list' | 'create' | 'edit' | 'detail'>('list');
     const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [user, setUser] = useState<User>();
+    const [error, setError] = useState<String>('');
+
+    const authenticatedUserRole = async () =>{
+
+        setError('');
+        try{
+            const response = await apiService.getUserProfile();
+            setUser(response);
+        }catch (error){
+            console.error("error fetching user profile", error);
+            setError("error fetching user profile");
+        }
+    };
+    useEffect(() => {
+        authenticatedUserRole();
+    }, []);
 
     useEffect(() => {
         if (id) {
@@ -25,6 +49,25 @@ const TasksPage: React.FC = () => {
             setView('list');
         }
     }, [id]);
+
+    const hasCreateAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
+    const hasUpdateAuthority = () =>{
+        if(user?.role === "project-manager" || user?.role === "developer"){
+            return true;
+        }
+        return false;
+    }
+    const hasDeleteAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
 
     const handleCreateTask = () => {
         navigate('/tasks/create');
@@ -91,6 +134,7 @@ const TasksPage: React.FC = () => {
                         <div className="page-header">
                             <h1 className="page-title">Task Details</h1>
                             <div className="action-buttons">
+                                {hasUpdateAuthority() && (
                                 <button
                                     onClick={() => handleEditTask(selectedTask)}
                                     className="edit-btn"
@@ -98,6 +142,7 @@ const TasksPage: React.FC = () => {
                                     <FaEdit />
                                     Edit
                                 </button>
+                                    )}
                                 <button
                                     onClick={handleBackToList}
                                     className="back-btn"
@@ -114,13 +159,15 @@ const TasksPage: React.FC = () => {
                     <div className="tasks-page-container">
                         <div className="tasks-header">
                             <h1 className="tasks-title">Tasks</h1>
-                            <button
+                            {hasCreateAuthority() &&(
+                                <button
                                 onClick={handleCreateTask}
                                 className="create-task-btn"
                             >
                                 <FaPlus />
                                 Create Task
                             </button>
+                                )}
                         </div>
                         <TaskList onEdit={handleEditTask} onView={handleViewTask} />
                     </div>
@@ -128,7 +175,16 @@ const TasksPage: React.FC = () => {
         }
     };
 
-    return renderContent();
+    return (
+        <div>
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
+            )}
+            {renderContent()}
+        </div>
+    );
 };
 
-export default TasksPage; 
+export default TasksPage;

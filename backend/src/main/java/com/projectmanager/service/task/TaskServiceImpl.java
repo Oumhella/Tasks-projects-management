@@ -142,4 +142,10 @@ public List<TaskResponse> getTasksByProjectId(UUID projectId) {
    List<Task> tasks = taskRepository.findTaskByProjectId(projectId);
     return tasks.stream().map(taskMapper::toResponse).collect(Collectors.toList());
 }
+
+    @Override
+    public List<Task> getTasksForUser(UUID userId) {
+        List<Task> tasks = taskRepository.findByAssignedTo(userId);
+        return tasks;
+    }
 }

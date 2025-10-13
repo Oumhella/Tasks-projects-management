@@ -33,9 +33,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    @PreAuthorize("hasAnyRole('admin','project-manager')")
     public UserResponse createUser(UserRequest request) {
-        UUID keycloakId = keycloakUserService.createKeycloakUser(request.getUsername(), request.getEmail(), request.getPassword(), request.getRole());
+//        UUID keycloakId = keycloakUserService.createKeycloakUser(request.getUsername(), request.getEmail(), request.getPassword(), request.getRole());
 
+        UUID keycloakId = keycloakUserService.inviteUser(request.getUsername(), request.getEmail(), request.getRole());
         User user = userMapper.toEntity(request);
         user.setKeycloakId(keycloakId);
         user.setCreatedAt(LocalDateTime.now());
@@ -58,6 +61,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyRole('admin','project-manager')")
     public UserResponse updateUser(UUID id, UserUpdateRequest updateRequest) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
@@ -73,6 +77,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyRole('admin','project-manager')")
     public void deleteUser(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));

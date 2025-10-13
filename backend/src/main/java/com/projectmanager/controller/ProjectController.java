@@ -9,6 +9,8 @@ import com.projectmanager.dto.response.UserResponse;
 import com.projectmanager.entity.Project;
 import com.projectmanager.entity.User;
 import com.projectmanager.mapper.ProjectMapper;
+import com.projectmanager.repository.ProjectRepository;
+import com.projectmanager.repository.UserRepository;
 import com.projectmanager.service.project.ProjectAnalysisService;
 import com.projectmanager.service.project.ProjectService;
 import com.projectmanager.service.user.UserService;
@@ -33,19 +35,28 @@ public class ProjectController {
     private final UserService userService ;
     private final ProjectMapper projectMapper;
     private final ProjectAnalysisService projectAnalysisService;
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ProjectController(ProjectService projectService, UserService userService, ProjectMapper projectMapper, ProjectAnalysisService projectAnalysisService) {
+    public ProjectController(ProjectService projectService, UserService userService, ProjectMapper projectMapper, ProjectAnalysisService projectAnalysisService, ProjectRepository projectRepository, UserRepository userRepository) {
         this.projectService = projectService;
         this.userService = userService;
         this.projectMapper = projectMapper;
         this.projectAnalysisService = projectAnalysisService;
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
-    public ResponseEntity<List<ProjectResponse>> getAllProjects() {
-        List<ProjectResponse> projects = projectService.findAllProjects();
-        return ResponseEntity.ok(projects);
+    public ResponseEntity<List<Project>> getAllProjects(Principal principal) {
+        UUID keycloakId = UUID.fromString(principal.getName());
+        Optional<User> user = userRepository.findByKeycloakId(keycloakId);
+        if (user.isPresent()) {
+            List<Project> projects = projectService.findProjectsByUserId(user.get().getId());
+            return ResponseEntity.ok(projects);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/{id}")

@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FaEdit, FaTrash, FaSearch, FaUser } from 'react-icons/fa';
 import apiService from '../../services/api';
+import './UserList.css';
 
 interface User {
   id: string;
   username: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   role: string;
   createdAt: string;
 }
@@ -29,11 +30,12 @@ const UserList: React.FC = () => {
     let filtered = users;
 
     if (searchTerm) {
+      const searchTermLower = searchTerm.toLowerCase();
       filtered = filtered.filter(user =>
-        user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+          (user.firstName?.toLowerCase() || '').includes(searchTermLower) ||
+          (user.lastName?.toLowerCase() || '').includes(searchTermLower) ||
+          (user.email?.toLowerCase() || '').includes(searchTermLower) ||
+          (user.username?.toLowerCase() || '').includes(searchTermLower)
       );
     }
 
@@ -103,179 +105,175 @@ const UserList: React.FC = () => {
     }
   };
 
+  const getUserInitials = (user: User) => {
+    const firstInitial = user.firstName ? user.firstName.charAt(0) : '';
+    const lastInitial = user.lastName ? user.lastName.charAt(0) : '';
+    return `${firstInitial}${lastInitial}` || 'U';
+  };
+
+  const getUserDisplayName = (user: User) => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    } else if (user.firstName) {
+      return user.firstName;
+    } else if (user.lastName) {
+      return user.lastName;
+    } else {
+      return 'Unknown User';
+    }
+  };
+
   if (loading) {
     return (
-      <div className="container">
-        <div className="card">
-          <h2>Loading Users...</h2>
+        <div className="user-list-container">
+          <div className="card">
+            <h2>Loading Users...</h2>
+          </div>
         </div>
-      </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container">
-        <div className="card">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button className="btn btn-primary" onClick={fetchUsers}>
-            Retry
-          </button>
+        <div className="user-list-container">
+          <div className="card">
+            <h2>Error</h2>
+            <p>{error}</p>
+            <button className="btn btn-primary" onClick={fetchUsers}>
+              Retry
+            </button>
+          </div>
         </div>
-      </div>
     );
   }
 
   return (
-    <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ color: '#1f2937' }}>Users</h1>
-        <Link to="/users/create" className="btn btn-primary">
-          <FaUser style={{ marginRight: '8px' }} />
-          Add User
-        </Link>
-      </div>
+      <div className="user-list-container">
+        <div className="user-list-header">
+          <h1>Users</h1>
+          <Link to="/users/create" className="btn btn-primary">
+            <FaUser className="btn-icon" />
+            Add User
+          </Link>
+        </div>
 
-      {/* Search and Filter */}
-      <div className="card">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '15px', alignItems: 'end' }}>
-          <div className="form-group">
-            <label className="form-label">Search Users</label>
-            <div style={{ position: 'relative' }}>
-              <FaSearch style={{ 
-                position: 'absolute', 
-                left: '12px', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                color: '#9ca3af' 
-              }} />
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Search by name, email, or username..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: '40px' }}
-              />
+        {/* Search and Filter */}
+        <div className="card">
+          <div className="filter-grid">
+            <div className="form-group">
+              <label className="form-label">Search Users</label>
+              <div className="search-input-container">
+                <FaSearch className="search-icon" />
+                <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Search by name, email, or username..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Filter by Role</label>
+              <select
+                  className="form-input"
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+              >
+                <option value="">All Roles</option>
+                <option value="admin">Administrator</option>
+                <option value="project-manager">Project Manager</option>
+                <option value="developer">Developer</option>
+                <option value="tester">Tester</option>
+              </select>
             </div>
           </div>
-          <div className="form-group">
-            <label className="form-label">Filter by Role</label>
-            <select
-              className="form-input"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="">All Roles</option>
-              <option value="admin">Administrator</option>
-              <option value="project-manager">Project Manager</option>
-              <option value="developer">Developer</option>
-              <option value="tester">Tester</option>
-            </select>
-          </div>
         </div>
-      </div>
 
-      {/* Users Table */}
-      <div className="card">
-        <h3 style={{ marginBottom: '20px', color: '#374151' }}>
-          Users ({filteredUsers.length})
-        </h3>
-        
-        {filteredUsers.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>
-            {users.length === 0 ? 'No users found.' : 'No users match your search criteria.'}
-          </p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: getRoleColor(user.role),
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                          marginRight: '12px',
-                          fontSize: '16px',
-                          fontWeight: 'bold'
-                        }}>
-                          {(user.firstName || '').charAt(0)}{(user.lastName || '').charAt(0)}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: '500', color: '#374151' }}>
-                            {user.firstName || ''} {user.lastName || ''}
+        {/* Users Table */}
+        <div className="card">
+          <h3 className="user-count">
+            Users ({filteredUsers.length})
+          </h3>
+
+          {filteredUsers.length === 0 ? (
+              <p className="no-users-message">
+                {users.length === 0 ? 'No users found.' : 'No users match your search criteria.'}
+              </p>
+          ) : (
+              <div className="table-container">
+                <table className="user-table">
+                  <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {filteredUsers.map((user) => (
+                      <tr key={user.id}>
+                        <td data-label="User">
+                          <div className="user-info">
+                            <div
+                                className="user-avatar"
+                                style={{ backgroundColor: getRoleColor(user.role) }}
+                            >
+                              {getUserInitials(user)}
+                            </div>
+                            <div className="user-details">
+                              <div className="user-name">
+                                {getUserDisplayName(user)}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontFamily: 'monospace', color: '#6b7280' }}>
-                        {user.username}
+                        </td>
+                        <td data-label="Username">
+                      <span className="username">
+                        {user.username || 'N/A'}
                       </span>
-                    </td>
-                    <td>{user.email}</td>
-                    <td>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        color: 'white',
-                        backgroundColor: getRoleColor(user.role)
-                      }}>
+                        </td>
+                        <td data-label="Email">{user.email || 'N/A'}</td>
+                        <td data-label="Role">
+                      <span
+                          className="role-badge"
+                          style={{ backgroundColor: getRoleColor(user.role) }}
+                      >
                         {getRoleLabel(user.role)}
                       </span>
-                    </td>
-                    <td>
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Link
-                          to={`/users/${user.id}/edit`}
-                          className="btn btn-secondary"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                        >
-                          <FaEdit style={{ marginRight: '4px' }} />
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="btn btn-danger"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                        >
-                          <FaTrash style={{ marginRight: '4px' }} />
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                        </td>
+                        <td data-label="Created" className="created-date">
+                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td data-label="Actions">
+                          <div className="action-buttons">
+                            <Link
+                                to={`/users/${user.id}/edit`}
+                                className="btn btn-secondary btn-sm"
+                            >
+                              <FaEdit className="btn-icon" />
+                              Edit
+                            </Link>
+                            <button
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="btn btn-danger btn-sm"
+                            >
+                              <FaTrash className="btn-icon" />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                  ))}
+                  </tbody>
+                </table>
+              </div>
+          )}
+        </div>
       </div>
-    </div>
   );
 };
 

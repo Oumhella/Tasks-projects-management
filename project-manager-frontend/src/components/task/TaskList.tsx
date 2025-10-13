@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import { FaEdit, FaEye, FaTrash, FaSearch } from 'react-icons/fa';
 import apiService from "../../services/api";
-import './TaskList.css';
+import '../../index.css';
 
 interface TaskListProps {
     onEdit: (task: any) => void;
@@ -21,6 +21,12 @@ interface Task {
     assignedToUserId: string;
     createdAt: string;
 }
+interface User {
+    id: string;
+    username: string;
+    role: 'admin' | 'project-manager' | 'developer' | 'observator';
+
+}
 
 const TaskList: React.FC<TaskListProps> = ({ onEdit, onView }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,6 +37,22 @@ const TaskList: React.FC<TaskListProps> = ({ onEdit, onView }) => {
     const [priorityFilter, setPriorityFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
     const [error, setError] = useState('');
+    const [user, setUser] = useState<User>();
+
+    const authenticatedUserRole = async () =>{
+
+        setError('');
+        try{
+            const response = await apiService.getUserProfile();
+            setUser(response);
+        }catch (error){
+            console.error("error fetching user profile", error);
+            setError("error fetching user profile");
+        }
+    };
+    useEffect(() => {
+        authenticatedUserRole();
+    }, []);
 
     const filteredtasks = useCallback(()=> {
         let filtered = tasks;
@@ -141,6 +163,26 @@ const TaskList: React.FC<TaskListProps> = ({ onEdit, onView }) => {
             default: return 'type-default';
         }
     };
+
+    const hasCreateAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
+
+    const hasUpdateAuthority = () =>{
+        if(user?.role === "project-manager" || user?.role === "developer"){
+            return true;
+        }
+        return false;
+    }
+    const hasDeleteAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
 
     if (loading) {
         return (
@@ -263,14 +305,16 @@ const TaskList: React.FC<TaskListProps> = ({ onEdit, onView }) => {
                                     >
                                         <FaEye />
                                     </button>
+                                    {hasUpdateAuthority() &&(
                                     <button
                                         onClick={() => onEdit(task)}
                                         className="action-btn edit-btn"
                                         title="Edit"
-                                        style={{ background: "#2563eb", color: "white", padding: "6px", borderRadius: "6px" }}
                                     >
                                         <FaEdit />
                                     </button>
+                                    )}
+                                    {hasDeleteAuthority() && (
                                     <button
                                         onClick={() => handleDeleteTask(task.id)}
                                         className="action-btn delete-btn"
@@ -278,6 +322,7 @@ const TaskList: React.FC<TaskListProps> = ({ onEdit, onView }) => {
                                     >
                                         <FaTrash />
                                     </button>
+                                        )}
                                 </div>
                             </td>
                         </tr>

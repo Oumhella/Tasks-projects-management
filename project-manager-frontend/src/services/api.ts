@@ -68,9 +68,129 @@ class ApiService {
     });
   }
   async analyzeProject(id: String): Promise<any> {
-    return this.request<any>(`/projects/analyze/${id}`, {
-      method: 'POST',
-    });
+    // First get the project and its tasks for AI analysis
+    const [project, tasks] = await Promise.all([
+      this.getProject(id.toString()),
+      this.getTasksByProjectId(id.toString())
+    ]);
+
+    // Prepare comprehensive project data for AI analysis
+    const projectDataForAnalysis = {
+      name: project.name,
+      description: project.description,
+      status: project.status,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      tasks: tasks,
+      members: project.members || [],
+      comments: project.comments || []
+    };
+
+    const prompt = `Analyze this project and provide detailed task-level insights. Return a JSON object with the following structure:
+
+    {
+      "tasks": [
+        {
+          "id": "original_task_id",
+          "title": "original_task_title",
+          "isAtRisk": boolean,
+          "riskScore": number (0-100),
+          "isCriticalPath": boolean,
+          "aiInsightSummary": "brief explanation of task status and recommendations"
+        }
+      ]
+    }
+
+    Project Context:
+    - Name: ${project.name}
+    - Description: ${project.description}
+    - Status: ${project.status}
+    - Tasks: ${JSON.stringify(tasks, null, 2)}
+    - Members: ${project.members?.map((m: any) => m.name).join(', ') || 'None'}
+
+    For each task, determine:
+    1. isAtRisk: true if the task is likely to miss its deadline or has blockers
+    2. riskScore: 0-100 score based on dependencies, priority, and timeline
+    3. isCriticalPath: true if this task is on the project's critical path
+    4. aiInsightSummary: brief analysis of the task's current state
+
+    Focus on identifying bottlenecks, dependencies, and actionable insights.`;
+
+    const chatHistory = [];
+    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+    const payload = {
+      contents: chatHistory,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            "tasks": {
+              "type": "ARRAY",
+              "items": {
+                "type": "OBJECT",
+                "properties": {
+                  "id": { "type": "STRING" },
+                  "title": { "type": "STRING" },
+                  "isAtRisk": { "type": "BOOLEAN" },
+                  "riskScore": { "type": "NUMBER" },
+                  "isCriticalPath": { "type": "BOOLEAN" },
+                  "aiInsightSummary": { "type": "STRING" }
+                },
+                "required": ["id", "title", "isAtRisk", "riskScore", "isCriticalPath", "aiInsightSummary"]
+              }
+            }
+          },
+          "required": ["tasks"]
+        }
+      }
+    };
+
+    const apiKey = 'AIzaSyD4Gj0ee03Q4Xn4BqmtNJPUQ3M2r5KxGLQ';
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (jsonText) {
+        const aiAnalysis = JSON.parse(jsonText);
+
+        // Merge AI analysis with original task data
+        const enhancedTasks = tasks.map(originalTask => {
+          const aiTask = aiAnalysis.tasks.find((t: any) => t.id === originalTask.id);
+          if (aiTask) {
+            return {
+              ...originalTask,
+              isAtRisk: aiTask.isAtRisk,
+              riskScore: aiTask.riskScore,
+              isCriticalPath: aiTask.isCriticalPath,
+              aiInsightSummary: aiTask.aiInsightSummary
+            };
+          }
+          return originalTask;
+        });
+
+        return enhancedTasks;
+      }
+
+      throw new Error("Invalid response from Gemini API");
+    } catch (error) {
+      console.error('Project analysis failed:', error);
+      // Fallback to returning original tasks if AI fails
+      return tasks;
+    }
   }
 
 
@@ -131,6 +251,11 @@ class ApiService {
     return this.request<any>(`/users/${id}`);
   }
 
+  async getUserProfile(): Promise<any> {
+    return this.request<any>(`/users/profile`);
+  }
+
+
   async createUser(user: any): Promise<any> {
     return this.request<any>('/users', {
       method: 'POST',
@@ -143,6 +268,9 @@ class ApiService {
       method: 'PUT',
       body: JSON.stringify(user),
     });
+  }
+  async getNotifications(): Promise<any[]> {
+    return this.request<any[]>('/users/notifications');
   }
 
   async deleteUser(id: string): Promise<void> {
@@ -280,7 +408,7 @@ class ApiService {
         }
       }
     };
-    const apiKey = process.env.REACT_APP_SECRET_KEY;
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
     const retryFetch = async (url: string, options: RequestInit, retries: number): Promise<Response> => {

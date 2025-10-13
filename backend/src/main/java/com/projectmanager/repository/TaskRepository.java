@@ -4,6 +4,7 @@ import com.projectmanager.entity.Task;
 import com.projectmanager.model.task.TaskPriority;
 import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.model.task.TaskType;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,4 +38,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
             "WHERE p.id = :projectId " +
             "ORDER BY t.createdAt DESC")
     List<Task> findTaskByProjectId(@Param("projectId") UUID projectId);
+
+
+    @Query("SELECT t FROM Task t JOIN FETCH t.assignedTo u WHERE u.id= :assignedTo")
+    List<Task> findByAssignedTo(@Param("assignedTo") UUID assignedTo);
 }

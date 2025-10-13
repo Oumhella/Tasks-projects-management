@@ -121,9 +121,9 @@ const ProjectPulse: FC<ProjectPulseProps> = ({ project }) => {
 
     if (isLoading) {
         return (
-            <div className="project-pulse-container flex items-center justify-center p-6">
-                <div className="flex items-center space-x-2">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
+            <div className="project-pulse-container loading-state">
+                <div className="loading-content">
+                    <RefreshCw className="loading-icon" />
                     <span>Analyzing project...</span>
                 </div>
             </div>
@@ -132,21 +132,21 @@ const ProjectPulse: FC<ProjectPulseProps> = ({ project }) => {
 
     if (error) {
         return (
-            <div className="project-pulse-container flex flex-col items-center justify-center p-6 bg-red-500/10 text-red-700">
-                <XCircle className="h-6 w-6 mb-2" />
-                <p className="text-sm text-center">{error}</p>
+            <div className="project-pulse-container error-state">
+                <XCircle className="error-icon" />
+                <p className="error-text">{error}</p>
             </div>
         );
     }
 
     if (!pulseData) {
         return (
-            <div className="project-pulse-container p-6">
-                <div className="flex items-center space-x-2">
-                    <Lightbulb className="h-6 w-6 text-blue-500" />
-                    <h3 className="text-lg font-semibold">Project Pulse</h3>
+            <div className="project-pulse-container no-data-state">
+                <div className="no-data-header">
+                    <Lightbulb className="no-data-icon" />
+                    <h3 className="no-data-title">Project Pulse</h3>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="no-data-subtitle">
                     No analysis available yet.
                 </p>
             </div>

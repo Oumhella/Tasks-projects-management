@@ -1,4 +1,7 @@
 package com.projectmanager.entity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.projectmanager.listener.comment.CommentActivityListener;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,6 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @EntityListeners(CommentActivityListener.class)
 @Getter
 @Setter
@@ -43,6 +47,7 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference  // prevent recursion: comment -> user -> comments -> ...
     private User user;
 
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)

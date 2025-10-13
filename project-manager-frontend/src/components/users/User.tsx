@@ -1,14 +1,13 @@
-// User.tsx - Updated version
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaSave, FaTimes, FaUser, FaEnvelope, FaKey, FaUserTag } from 'react-icons/fa';
-import './user.css';
+import './User.css';
 import apiService from "../../services/api";
 
 interface UserProps {
     project?: any;
-    onMemberAdded?: () => void; // Callback for when member is successfully added
-    onCancel?: () => void; // Callback for cancel action
+    onMemberAdded?: () => void;
+    onCancel?: () => void;
 }
 
 interface UserFormData {
@@ -51,23 +50,22 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
     const [isProjectContext, setIsProjectContext] = useState(false);
 
     useEffect(() => {
-        // Determine if we're in project context (adding member to project)
         setIsProjectContext(!!project);
 
         const fetchUserData = async () => {
-            if (id && !project) { // Only fetch user data if editing existing user (not adding to project)
+            if (id && !project) {
                 setIsEditMode(true);
                 try {
                     setLoading(true);
                     const userData = await apiService.getUser(id);
                     setFormData({
-                        username: userData.username,
-                        email: userData.email,
+                        username: userData.username || '',
+                        email: userData.email || '',
                         password: '',
                         confirmPassword: '',
-                        firstName: userData.firstName,
-                        lastName: userData.lastName,
-                        role: userData.role
+                        firstName: userData.firstName || '',
+                        lastName: userData.lastName || '',
+                        role: userData.role || 'developer'
                     });
                 } catch (error) {
                     console.error('Failed to fetch user data:', error);
@@ -142,7 +140,6 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
 
         try {
             if (isProjectContext && project) {
-                // Adding member to project
                 const memberData = {
                     username: formData.username,
                     email: formData.email,
@@ -153,12 +150,10 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
                 };
                 await apiService.addProjectMember(project.id, memberData);
 
-                // Call callback if provided, otherwise stay in project context
                 if (onMemberAdded) {
                     onMemberAdded();
                 }
             } else if (isEditMode && id) {
-                // Editing existing user
                 const userUpdateData = {
                     username: formData.username,
                     email: formData.email,
@@ -169,7 +164,6 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
                 await apiService.updateUser(id, userUpdateData);
                 navigate('/users');
             } else {
-                // Creating new user
                 const userCreateData = {
                     username: formData.username,
                     email: formData.email,
@@ -191,9 +185,9 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
 
     const handleCancel = () => {
         if (isProjectContext && onCancel) {
-            onCancel(); // Use callback if in project context
+            onCancel();
         } else {
-            navigate('/users'); // Default navigation for user management
+            navigate('/users');
         }
     };
 
@@ -208,8 +202,8 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
 
     if (isEditMode && loading && !isProjectContext) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="user-loading-container">
+                <div className="user-loading-spinner"></div>
             </div>
         );
     }
@@ -238,7 +232,7 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
                     <div className="form-grid">
                         <div className="form-group">
                             <label className="form-label">
-                                <FaUser />
+                                <FaUser className="form-icon" />
                                 Username *
                             </label>
                             <input
@@ -256,7 +250,7 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
 
                         <div className="form-group">
                             <label className="form-label">
-                                <FaEnvelope />
+                                <FaEnvelope className="form-icon" />
                                 Email *
                             </label>
                             <input
@@ -274,7 +268,7 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
 
                         <div className="form-group">
                             <label className="form-label">
-                                <FaUser />
+                                <FaUser className="form-icon" />
                                 First Name *
                             </label>
                             <input
@@ -292,7 +286,7 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
 
                         <div className="form-group">
                             <label className="form-label">
-                                <FaUser />
+                                <FaUser className="form-icon" />
                                 Last Name *
                             </label>
                             <input
@@ -308,49 +302,49 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
                             )}
                         </div>
 
-                        {!isEditMode && (
-                            <>
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        <FaKey />
-                                        Password *
-                                    </label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        className={`form-input ${errors.password ? 'error' : ''}`}
-                                        placeholder="Enter password"
-                                    />
-                                    {errors.password && (
-                                        <span className="error-message">{errors.password}</span>
-                                    )}
-                                </div>
+                        {/*{!isEditMode && (*/}
+                        {/*    <>*/}
+                        {/*        <div className="form-group">*/}
+                        {/*            <label className="form-label">*/}
+                        {/*                <FaKey className="form-icon" />*/}
+                        {/*                Password **/}
+                        {/*            </label>*/}
+                        {/*            <input*/}
+                        {/*                type="password"*/}
+                        {/*                name="password"*/}
+                        {/*                value={formData.password}*/}
+                        {/*                onChange={handleInputChange}*/}
+                        {/*                className={`form-input ${errors.password ? 'error' : ''}`}*/}
+                        {/*                placeholder="Enter password"*/}
+                        {/*            />*/}
+                        {/*            {errors.password && (*/}
+                        {/*                <span className="error-message">{errors.password}</span>*/}
+                        {/*            )}*/}
+                        {/*        </div>*/}
 
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        <FaKey />
-                                        Confirm Password *
-                                    </label>
-                                    <input
-                                        type="password"
-                                        name="confirmPassword"
-                                        value={formData.confirmPassword}
-                                        onChange={handleInputChange}
-                                        className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
-                                        placeholder="Confirm password"
-                                    />
-                                    {errors.confirmPassword && (
-                                        <span className="error-message">{errors.confirmPassword}</span>
-                                    )}
-                                </div>
-                            </>
-                        )}
+                        {/*        <div className="form-group">*/}
+                        {/*            <label className="form-label">*/}
+                        {/*                <FaKey className="form-icon" />*/}
+                        {/*                Confirm Password **/}
+                        {/*            </label>*/}
+                        {/*            <input*/}
+                        {/*                type="password"*/}
+                        {/*                name="confirmPassword"*/}
+                        {/*                value={formData.confirmPassword}*/}
+                        {/*                onChange={handleInputChange}*/}
+                        {/*                className={`form-input ${errors.confirmPassword ? 'error' : ''}`}*/}
+                        {/*                placeholder="Confirm password"*/}
+                        {/*            />*/}
+                        {/*            {errors.confirmPassword && (*/}
+                        {/*                <span className="error-message">{errors.confirmPassword}</span>*/}
+                        {/*            )}*/}
+                        {/*        </div>*/}
+                        {/*    </>*/}
+                        {/*)}*/}
 
                         <div className="form-group role-select-group">
                             <label className="form-label">
-                                <FaUserTag />
+                                <FaUserTag className="form-icon" />
                                 Role *
                             </label>
                             <select
@@ -375,21 +369,27 @@ const User: React.FC<UserProps> = ({ project, onMemberAdded, onCancel }) => {
                         <button
                             type="button"
                             onClick={handleCancel}
-                            className="cancel-btn"
+                            className="btn btn-cancel"
                             disabled={loading}
                         >
-                            <FaTimes />
+                            <FaTimes className="btn-icon" />
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="save-btn"
+                            className="btn btn-primary"
                             disabled={loading}
                         >
-                            <FaSave />
-                            {loading ? 'Saving...' : (
-                                isProjectContext ? 'Add Member' :
-                                    isEditMode ? 'Update User' : 'Create User'
+                            {loading ? (
+                                <>
+                                    <span className="btn-spinner"></span>
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <FaSave className="btn-icon" />
+                                    {isProjectContext ? 'Add Member' : isEditMode ? 'Update User' : 'Create User'}
+                                </>
                             )}
                         </button>
                     </div>

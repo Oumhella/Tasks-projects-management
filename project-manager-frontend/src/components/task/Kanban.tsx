@@ -1,85 +1,14 @@
-// import * as React from 'react';
-// import * as ReactDOM from 'react-dom';
-// import { KanbanComponent, ColumnsDirective, ColumnDirective } from "@syncfusion/ej2-react-kanban";
-// import {useEffect, useState} from "react";
-// // import { kanbanData } from './datasource';
-// import { extend } from '@syncfusion/ej2-base';
-// import apiService from "../../services/api";
-// import { createRoot } from 'react-dom/client';
-//
-// import "@syncfusion/ej2-base/styles/material.css";
-// import '@syncfusion/ej2-buttons/styles/material.css';
-// import "@syncfusion/ej2-layouts/styles/material.css";
-// import '@syncfusion/ej2-dropdowns/styles/material.css';
-// import '@syncfusion/ej2-inputs/styles/material.css';
-// import "@syncfusion/ej2-navigations/styles/material.css";
-// import "@syncfusion/ej2-popups/styles/material.css";
-// import "@syncfusion/ej2-react-kanban/styles/material.css";
-// interface Task {
-//     id: string;
-//     title: string;
-//     description: string;
-//     priority: string;
-//     type: string;
-//     status: string;
-//     estimatedHours: number;
-//     dueDate: string;
-//     projectId: string;
-//     assignedToUserId: string;
-//     createdAt: string;
-// }
-// interface kanbanProps{
-//     project: any;
-// }
-//
-//
-// const Kanban: React.FC<kanbanProps> = ({project})=>{
-//
-//     const [tasks, setTasks] = useState<Task[]>([]);
-//     const [loading, setLoading] = useState(true);
-//     const [error, setError] = useState<string>('');
-//
-//     useEffect(() => {
-//         setLoading(true);
-//         setError('');
-//         const tasksdata = async() => {
-//             try {
-//                 const tasks = await apiService.getTasksByProjectId(project.id);
-//                 setTasks(tasks);
-//             }catch (error){
-//                 console.error("error fetching tasks",error);
-//                 setError("error fetching tasks");
-//             }finally {
-//                 setLoading(false);
-//             }
-//
-//         };
-//         tasksdata();
-//     }, [project]);
-//
-//     if (loading) return <p>Loading tasks...</p>;
-//     if (error) return <p>{error}</p>;
-//     console.log("Tasks for Kanban:", tasks);
-//
-//     return (
-//
-//     <KanbanComponent id="kanban" keyField="status" dataSource={tasks} cardSettings={{ contentField: "description", headerField: "id" }}
-//                          swimlaneSettings={{ keyField: "assignedToUserId" }} allowDragAndDrop={true}>
-//             <ColumnsDirective>
-//                 <ColumnDirective headerText="To Do" keyField="Open" />
-//                 <ColumnDirective headerText="In Progress" keyField="InProgress" />
-//                 <ColumnDirective headerText="Testing" keyField="Testing" />
-//                 <ColumnDirective headerText="Done" keyField="Close" />
-//             </ColumnsDirective>
-//         </KanbanComponent>
-//     );
-// }
-//
-// export default Kanban;
-import React, { useEffect, useState } from "react";
-import Board from "@lourenci/react-kanban";
-import "@lourenci/react-kanban/dist/styles.css";
+import * as React from "react";
+import { useEffect, useState } from "react";
+import {
+    KanbanComponent,
+    ColumnsDirective,
+    ColumnDirective,
+} from "@syncfusion/ej2-react-kanban";
 import apiService from "../../services/api";
+import TaskForm from "./TaskForm";
+import "@syncfusion/ej2-react-kanban/styles/material.css";
+import "./Kanban.css";
 
 interface Task {
     id: string;
@@ -99,90 +28,246 @@ interface KanbanProps {
     project: any;
 }
 
+interface User {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    role: 'admin' | 'project-manager' | 'developer' | 'observator';
+
+}
+
 const Kanban: React.FC<KanbanProps> = ({ project }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>("");
+    const [showModal, setShowModal] = useState(false);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [user, setUser] = useState<User>();
+    const [users, setUsers] = useState<User[]>([]);
+
+
+
+    const getUserNames = async () =>{
+        setError('');
+        try {
+            const response= tasks.map((task) => (
+             apiService.getUser(task.assignedToUserId))
+        );
+            const users = await Promise.all(response);
+            setUsers(users);
+        }catch (error){
+            console.error("error fetching users", error);
+            setError("error fetching users");
+        }
+    }
+    useEffect(() => {
+        getUserNames();
+    }, []);
+
+    const authenticatedUserRole = async () =>{
+        setError('');
+        try{
+            const response = await apiService.getUserProfile();
+            setUser(response);
+        }catch (error){
+            console.error("error fetching user profile", error);
+            setError("error fetching user profile");
+        }
+    };
+    useEffect(() => {
+        authenticatedUserRole();
+    }, []);
+
+    const fetchTasks = async () => {
+        try {
+            const tasks = await apiService.getTasksByProjectId(project.id);
+
+            const users = await Promise.all(
+                tasks.map(task => apiService.getUser(task.assignedToUserId))
+            );
+
+            const tasksWithNames = tasks.map((task, i) => ({
+                ...task,
+                assignedToUserName: `${users[i].firstName} ${users[i].lastName}`,
+            }))
+
+        setUsers(users);
+        setTasks(tasksWithNames);
+
+        } catch (err) {
+            console.error("Error fetching tasks", err);
+            setError("Error fetching tasks");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchTasks = async () => {
-            setLoading(true);
-            setError("");
-            try {
-                const tasks = await apiService.getTasksByProjectId(project.id);
-                setTasks(tasks);
-            } catch (err) {
-                console.error("Error fetching tasks", err);
-                setError("Error fetching tasks");
-            } finally {
-                setLoading(false);
-            }
-        };
+        setLoading(true);
+        setError("");
         fetchTasks();
     }, [project]);
 
-    if (loading) return <p>Loading tasks...</p>;
-    if (error) return <p>{error}</p>;
+    const handleDeleteTask = async (taskId: string) => {
+        if (!window.confirm("Are you sure you want to delete this task?")) return;
 
-    console.log(tasks);
-    const board = {
-        columns: [
-            {
-                id: "todo",
-                title: "To Do",
-                cards: tasks
-                    .filter((t) => t.status === "TODO")
-                    .map((t) => ({
-                        id: t.id,
-                        title: t.title,
-                        description: t.description
-                    }))
-            },
-            {
-                id: "inprogress",
-                title: "In Progress",
-                cards: tasks
-                    .filter((t) => t.status === "IN_PROGRESS")
-                    .map((t) => ({
-                        id: t.id,
-                        title: t.title,
-                        description: t.description
-                    }))
-            },
-            {
-                id: "testing",
-                title: "Testing",
-                cards: tasks
-                    .filter((t) => t.status === "TESTING")
-                    .map((t) => ({
-                        id: t.id,
-                        title: t.title,
-                        description: t.description
-                    }))
-            },
-            {
-                id: "done",
-                title: "Done",
-                cards: tasks
-                    .filter((t) => t.status === "CLOSED")
-                    .map((t) => ({
-                        id: t.id,
-                        title: t.title,
-                        description: t.description
-                    }))
-            }
-        ]
+        try {
+            await apiService.deleteTask(taskId);
+            setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+            setShowModal(false);
+        } catch (err) {
+            console.error("Error deleting task", err);
+            alert("Failed to delete task.");
+        }
+    };
+    const hasCreateAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
+
+    const hasUpdateAuthority = () =>{
+        if(user?.role === "project-manager" || user?.role === "developer"){
+            return true;
+        }
+        return false;
+    }
+    const hasDeleteAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
+
+    if (loading) {
+        return (
+            <div className="loading-container">
+                <p>Loading tasks...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="error-container">
+                <p>{error}</p>
+            </div>
+        );
+    }
+
+    const CardTemplate = (props: Task) => {
+        return (
+            <div className="custom-card-template">
+                <div className={`e-card-tags ${props.priority}`}>
+                    {props.priority}
+                </div>
+                <h3>{props.title}</h3>
+                <p>{props.description}</p>
+                {hasDeleteAuthority() && (
+                <button
+                    className="delete-btn"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTask(props.id);
+                    }}
+                >
+                    Delete
+                </button>
+                    )}
+            </div>
+        );
     };
 
     return (
-        <Board
-            disableColumnDrag
-            initialBoard={board}
-            allowAddCard={{ on: "top" }}
-            allowRemoveCard
-        />
+        <div className="kanban-container">
+            {hasCreateAuthority() && (
+            <button
+                className="add-task-btn"
+                onClick={() => {
+                    setEditingTask(null);
+                    setShowModal(true);
+                }}
+            >
+                + Add Task
+            </button>
+                )}
+
+            <KanbanComponent
+                id="kanban"
+                className="e-kanban"
+                keyField="status"
+                dataSource={tasks}
+                allowDragAndDrop={true}
+                allowKeyboard={true}
+                enableTooltip={true}
+
+                swimlaneSettings={{ keyField: "assignedToUserId",
+                                    textField: "assignedToUserName",
+                }}
+                cardSettings={{
+                    headerField: "title",
+                    contentField: "description",
+                    tagsField: "priority",
+                    grabberField: "type",
+                    template: CardTemplate,
+                }}
+                cardRendered={(args) => {
+                    if (args.data.dueDate) {
+                        const dueDate = new Date(args.data.dueDate + 'T00:00:00');
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        if (dueDate < today) {
+                            args.element.classList.add('overdue-card');
+                        }
+                    }
+                }}
+                cardClick={(args: any) => {
+                    setEditingTask(args.data as Task);
+                    setShowModal(true);
+                }}
+                dragStop={async (args: any) => {
+                    const draggedTask = args.data[0];
+                    try {
+                        await apiService.updateTask(draggedTask.id, { ...draggedTask });
+                        setTasks(prev =>
+                            prev.map(task =>
+                                task.id === draggedTask.id ? { ...task, status: draggedTask.status } : task
+                            )
+                        );
+                    } catch (err) {
+                        console.error("Error updating task", err);
+                    }
+                }}
+            >
+                <ColumnsDirective>
+                    <ColumnDirective headerText="To Do" keyField="TODO" />
+                    <ColumnDirective headerText="In Progress" keyField="IN_PROGRESS" />
+                    <ColumnDirective headerText="Testing" keyField="TESTING" />
+                    <ColumnDirective headerText="Done" keyField="DONE" />
+                </ColumnsDirective>
+            </KanbanComponent>
+
+            {showModal && (
+                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <TaskForm
+                            task={editingTask ?? undefined}
+                            projectId={project.id}
+                            readOnlyProject={true}
+                            onSave={async () => {
+                                await fetchTasks();
+                                setShowModal(false);
+                            }}
+                            onCancel={() => setShowModal(false)}
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
-
 
 export default Kanban;

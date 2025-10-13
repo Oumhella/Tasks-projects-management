@@ -1,5 +1,7 @@
 package com.projectmanager.entity;//package com.project_manager.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
@@ -38,6 +40,7 @@ public class User {
 
     @OneToMany(mappedBy = "assignedTo")
     private Set<Task> assignedTasks = new HashSet<>();
+
 
     @OneToMany(mappedBy = "createdBy")
     private Set<Task> createdTasks = new HashSet<>();

@@ -123,69 +123,156 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel, is
 
     return (
         <div className="project-form-container">
-            {error && <div className="error-message">{error}</div>}
-            <form onSubmit={handleSubmit}>
-                <div className="form-row">
-                    <label>Project Name *</label>
-                    <input type="text" name="name" value={formData.name} onChange={handleInputChange} disabled={loading} placeholder="Enter project name" />
+            {error && (
+                <div className="alert alert-danger">
+                    {error}
+                </div>
+            )}
+            <form onSubmit={handleSubmit} className="project-form">
+                <div className="form-group">
+                    <label className="form-label">Project Name *</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        placeholder="Enter project name"
+                        className="form-control"
+                    />
                 </div>
 
-                <div className="form-row">
-                    <label>Status</label>
-                    <select name="status" value={formData.status} onChange={handleInputChange} disabled={loading}>
-                        {statusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                <div className="form-group">
+                    <label className="form-label">Status</label>
+                    <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        className="form-select"
+                    >
+                        {statusOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
                     </select>
                 </div>
 
-                <div className="form-row">
-                    <label>Start Date</label>
-                    <input type="date" name="startDate" value={formData.startDate} onChange={handleInputChange} disabled={loading} />
+                <div className="date-grid">
+                    <div className="form-group">
+                        <label className="form-label">Start Date</label>
+                        <input
+                            type="date"
+                            name="startDate"
+                            value={formData.startDate}
+                            onChange={handleInputChange}
+                            disabled={loading}
+                            className="form-control"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">End Date</label>
+                        <input
+                            type="date"
+                            name="endDate"
+                            value={formData.endDate}
+                            onChange={handleInputChange}
+                            disabled={loading}
+                            className="form-control"
+                        />
+                    </div>
                 </div>
 
-                <div className="form-row">
-                    <label>End Date</label>
-                    <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} disabled={loading} />
-                </div>
-
-                <div className="form-row">
-                    <label>Project Icon</label>
+                <div className="form-group">
+                    <label className="form-label">Project Icon</label>
                     <div className="icon-options">
                         {iconOptions.map((icon, index) => (
-                            <button key={index} type="button" disabled={loading} onClick={() => setFormData(prev => ({ ...prev, icon }))} className={formData.icon === icon ? 'selected' : ''}>
+                            <button
+                                key={index}
+                                type="button"
+                                disabled={loading}
+                                onClick={() => setFormData(prev => ({ ...prev, icon }))}
+                                className={`icon-option ${formData.icon === icon ? 'selected' : ''}`}
+                            >
                                 {icon}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <div className="form-row">
-                    <label>Project Color</label>
+                <div className="form-group">
+                    <label className="form-label">Project Color</label>
                     <div className="color-options">
                         {colorOptions.map((color, index) => (
-                            <button key={index} type="button" disabled={loading} onClick={() => setFormData(prev => ({ ...prev, color }))} style={{ backgroundColor: color }} className={formData.color === color ? 'selected' : ''}></button>
+                            <button
+                                key={index}
+                                type="button"
+                                disabled={loading}
+                                onClick={() => setFormData(prev => ({ ...prev, color }))}
+                                style={{ backgroundColor: color }}
+                                className={`color-option ${formData.color === color ? 'selected' : ''}`}
+                            ></button>
                         ))}
                     </div>
                 </div>
 
-                <div className="form-row">
-                    <label>Description</label>
-                    <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} disabled={loading} placeholder="Enter project description" />
+                <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows={4}
+                        disabled={loading}
+                        placeholder="Enter project description"
+                        className="form-control"
+                    />
                 </div>
 
                 <div className="project-preview">
-                    <div className="icon-preview" style={{ backgroundColor: formData.color }}>{formData.icon}</div>
+                    <div
+                        className="icon-preview"
+                        style={{ backgroundColor: formData.color }}
+                    >
+                        {formData.icon}
+                    </div>
                     <div className="preview-text">
                         <h4>{formData.name || 'Project Name'}</h4>
                         <p>{formData.description || 'Project description will appear here'}</p>
-                        <small>Status: {statusOptions.find(s => s.value === formData.status)?.label}</small>
+                        <small>
+                            Status: {statusOptions.find(s => s.value === formData.status)?.label}
+                        </small>
                     </div>
                 </div>
 
                 <div className="form-actions">
-                    {isEdit && <button type="button" onClick={handleDelete} disabled={loading} className="delete-btn">Delete Project</button>}
+                    {isEdit && (
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            disabled={loading}
+                            className="btn btn-outline btn-danger"
+                        >
+                            Delete Project
+                        </button>
+                    )}
                     <div className="action-buttons">
-                        <button type="button" onClick={onCancel} disabled={loading} className="cancel-btn"><FaTimes /> Cancel</button>
-                        <button type="submit" disabled={loading || !formData.name.trim()} className="save-btn"><FaSave /> {loading ? 'Saving...' : isEdit ? 'Update Project' : 'Create Project'}</button>
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            disabled={loading}
+                            className="btn btn-outline"
+                        >
+                            <FaTimes /> Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading || !formData.name.trim()}
+                            className="btn btn-primary"
+                        >
+                            {loading ? <span className="spinner"></span> : <FaSave />}
+                            {loading ? 'Saving...' : isEdit ? 'Update Project' : 'Create Project'}
+                        </button>
                     </div>
                 </div>
             </form>

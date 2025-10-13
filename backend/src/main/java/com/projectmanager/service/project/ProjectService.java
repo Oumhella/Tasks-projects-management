@@ -29,5 +29,5 @@ public interface ProjectService {
 
     void deleteProject(UUID id);
 
-
+    List<Project> findProjectsByUserId(UUID userId);
 }

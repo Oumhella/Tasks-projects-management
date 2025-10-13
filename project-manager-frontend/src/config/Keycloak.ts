@@ -1,7 +1,6 @@
-// keycloak.ts
+
 import Keycloak from "keycloak-js";
 
-// Create the Keycloak instance
 // @ts-ignore
 const keycloak = new Keycloak({
     url: "http://localhost:8080",
@@ -9,10 +8,14 @@ const keycloak = new Keycloak({
     clientId: "project-manager-frontend",
 });
 
-// Init options for ReactKeycloakProvider
 const initOptions = {
     onLoad: "login-required",
-    redirectUri: "http://localhost:3000",
+    redirectUri: "http://localhost:3000/",
+    checkLoginIframe: false,
+    // Add theme configuration if using custom theme
+    // theme: "auraflow"
 };
+
+
 
 export { keycloak, initOptions };

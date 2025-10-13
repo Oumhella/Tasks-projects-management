@@ -1,0 +1,410 @@
+/* AuraFlow Keycloak Custom Theme - Professional & Centered */
+:root {
+  /* Match your frontend design system */
+  --primary: #4a8c9a;
+  --primary-hover: #1d4ed8;
+  --secondary: #4faae3;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-900: #111827;
+
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  --transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset and Base */
+* {
+  box-sizing: border-box;
+}
+
+/* Body and Background */
+body.login-pf {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--space-4);
+}
+
+/* Main Login Container */
+.login-pf-page {
+  background: transparent;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.card-pf {
+  background: var(--white);
+  border: none;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-10);
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Header and Logo */
+.login-pf-header {
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+.login-pf-header h1 {
+  color: var(--gray-900);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-3) 0;
+  letter-spacing: -0.025em;
+}
+
+.login-pf-header p {
+  color: var(--gray-600);
+  font-size: 0.9375rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.login-pf-header .kc-logo-text {
+  display: none;
+}
+
+/* Custom logo */
+.login-pf-header::before {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-6);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+/* Form Styling */
+.login-pf-page form {
+  width: 100%;
+}
+
+.login-pf-page .form-group {
+  margin-bottom: var(--space-5);
+}
+
+.login-pf-page label {
+  color: var(--gray-700);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: var(--space-2);
+  display: block;
+  letter-spacing: 0.01em;
+}
+
+.login-pf-page input[type="text"],
+.login-pf-page input[type="email"],
+.login-pf-page input[type="password"] {
+  width: 100%;
+  padding: 0.6875rem var(--space-4);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  transition: var(--transition);
+  background: var(--white);
+  color: var(--gray-900);
+  font-family: inherit;
+}
+
+.login-pf-page input[type="text"]::placeholder,
+.login-pf-page input[type="email"]::placeholder,
+.login-pf-page input[type="password"]::placeholder {
+  color: #9ca3af;
+}
+
+.login-pf-page input[type="text"]:focus,
+.login-pf-page input[type="email"]:focus,
+.login-pf-page input[type="password"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.login-pf-page input[type="text"]:hover,
+.login-pf-page input[type="email"]:hover,
+.login-pf-page input[type="password"]:hover {
+  border-color: #d1d5db;
+}
+
+/* Password Toggle */
+.password-toggle {
+  position: relative;
+}
+
+.password-toggle button {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+  color: var(--gray-600);
+}
+
+/* Buttons */
+.login-pf-page .btn-primary,
+.login-pf-page button[type="submit"] {
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0.6875rem var(--space-6);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  width: 100%;
+  transition: var(--transition);
+  margin-top: var(--space-6);
+  cursor: pointer;
+  color: var(--white);
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-sm);
+}
+
+.login-pf-page .btn-primary:hover,
+.login-pf-page button[type="submit"]:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.login-pf-page .btn-primary:active,
+.login-pf-page button[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Links */
+.login-pf-page a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+  font-size: 0.875rem;
+}
+
+.login-pf-page a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* Error Messages */
+.alert-error,
+.login-pf-page .alert.alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Success Messages */
+.alert-success,
+.login-pf-page .alert.alert-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Warning Messages */
+.alert-warning,
+.login-pf-page .alert.alert-warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  font-size: 0.875rem;
+}
+
+/* Remember Me Checkbox */
+.login-pf-page .checkbox {
+  margin: var(--space-5) 0;
+}
+
+.login-pf-page .checkbox label {
+  font-weight: 500;
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.login-pf-page .checkbox input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+/* Forgot Password / Additional Links */
+.login-pf-page .form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-4);
+}
+
+/* Footer Links */
+.login-pf-signup {
+  text-align: center;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--gray-200);
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.login-pf-signup a {
+  font-weight: 600;
+  margin-left: var(--space-2);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  body.login-pf {
+    padding: var(--space-3);
+  }
+
+  .card-pf {
+    padding: var(--space-8);
+  }
+
+  .login-pf-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-pf-header::before {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-pf {
+    padding: var(--space-6);
+  }
+
+  .login-pf-header {
+    margin-bottom: var(--space-6);
+  }
+}
+
+/* Loading State */
+.login-pf-page .btn-primary:disabled,
+.login-pf-page button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Social Login Buttons */
+.login-pf-page .kc-social-providers {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--gray-200);
+}
+
+.login-pf-page .kc-social-providers .kc-social-section-title {
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 0.875rem;
+  margin-bottom: var(--space-4);
+  font-weight: 500;
+}
+
+.login-pf-page .kc-social-providers .kc-social-provider-name {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 0.6875rem var(--space-4);
+  transition: var(--transition);
+  width: 100%;
+  margin-bottom: var(--space-3);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  display: block;
+  color: var(--gray-700);
+}
+
+.login-pf-page .kc-social-providers .kc-social-provider-name:hover {
+  border-color: var(--primary);
+  background: var(--gray-50);
+}
+
+/* Info Text */
+.login-pf-page .instruction {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+  margin-bottom: var(--space-5);
+  line-height: 1.5;
+}
+
+/* Required Field Indicator */
+.login-pf-page .required {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+/* Focus visible for accessibility */
+.login-pf-page *:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions */
+.login-pf-page * {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}

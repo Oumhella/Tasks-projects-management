@@ -152,6 +152,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                 projectId: formData.projectId,
                 assignedToUserId: formData.assignedToUserId || null
             };
+            console.log('Sending task data:', taskData); // Add this line
 
             if (task) {
                 await apiService.updateTask(task.id, taskData);
@@ -169,10 +170,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
     };
 
     const priorityOptions = [
-        { value: 'CRITICAL', label: 'Critical', color: 'text-red-600' },
-        { value: 'HIGH', label: 'High', color: 'text-orange-600' },
-        { value: 'MEDIUM', label: 'Medium', color: 'text-yellow-600' },
-        { value: 'LOW', label: 'Low', color: 'text-green-600' }
+        { value: 'CRITICAL', label: 'Critical' },
+        { value: 'HIGH', label: 'High' },
+        { value: 'MEDIUM', label: 'Medium' },
+        { value: 'LOW', label: 'Low' }
     ];
 
     const typeOptions = [
@@ -193,9 +194,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
 
     if (initialLoading) {
         return (
-            <div className="loading-container">
-                <div className="loading-spinner"></div>
-                <span className="loading-text">Loading form data...</span>
+            <div className="task-loading-container">
+                <div className="task-loading-spinner"></div>
+                <span className="task-loading-text">Loading form data...</span>
             </div>
         );
     }
@@ -217,25 +218,20 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
     return (
         <div className="task-form-container">
             {error && (
-                <div className="error-message">
-                    <div className="error-content">
-                        <div className="error-icon">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
+                <div className="task-error-message">
+                    <div className="task-error-content">
+                        <div className="task-error-icon">
+                            <span>⚠️</span>
                         </div>
                         <div>
-                            <p className="error-text">{error}</p>
+                            <p className="task-error-text">{error}</p>
                         </div>
-                        <div className="error-dismiss">
+                        <div className="task-error-dismiss">
                             <button
                                 onClick={() => setError('')}
-                                className="error-dismiss-button"
+                                className="task-error-dismiss-button"
                             >
-                                <span className="sr-only">Dismiss</span>
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
+                                <span>×</span>
                             </button>
                         </div>
                     </div>
@@ -245,14 +241,14 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
             <div className="task-form-header">
                 <h2>{task ? 'Edit Task' : 'Create New Task'}</h2>
                 {readOnlyProject && projectId && (
-                    <p className="project-context">Creating task for: <strong>{getCurrentProjectName()}</strong></p>
+                    <p className="task-project-context">Creating task for: <strong>{getCurrentProjectName()}</strong></p>
                 )}
             </div>
 
             <form onSubmit={handleSubmit} className="task-form">
-                <div className="form-grid">
-                    <div className="form-group">
-                        <label className="form-label">
+                <div className="task-form-grid">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Title *
                         </label>
                         <input
@@ -261,13 +257,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                             value={formData.title}
                             onChange={handleInputChange}
                             required
-                            className="form-input"
+                            className="task-form-input"
                             placeholder="Enter task title"
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Project *
                         </label>
                         {readOnlyProject && projectId ? (
@@ -276,9 +272,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                                     type="text"
                                     value={getCurrentProjectName()}
                                     disabled
-                                    className="form-input"
+                                    className="task-form-input"
                                 />
-                                <span className="fixed-project-note">
+                                <span className="task-fixed-project-note">
                                     (Fixed to current project)
                                 </span>
                             </div>
@@ -288,7 +284,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                                 value={formData.projectId}
                                 onChange={handleInputChange}
                                 required
-                                className="form-select"
+                                className="task-form-select"
                             >
                                 <option value="">Select a project</option>
                                 {projects.map((project) => (
@@ -300,15 +296,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                         )}
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Priority
                         </label>
                         <select
                             name="priority"
                             value={formData.priority}
                             onChange={handleInputChange}
-                            className="form-select"
+                            className="task-form-select"
                         >
                             {priorityOptions.map(option => (
                                 <option key={option.value} value={option.value}>
@@ -318,15 +314,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                         </select>
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Type
                         </label>
                         <select
                             name="type"
                             value={formData.type}
                             onChange={handleInputChange}
-                            className="form-select"
+                            className="task-form-select"
                         >
                             {typeOptions.map(option => (
                                 <option key={option.value} value={option.value}>
@@ -336,15 +332,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                         </select>
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Status
                         </label>
                         <select
                             name="status"
                             value={formData.status}
                             onChange={handleInputChange}
-                            className="form-select"
+                            className="task-form-select"
                         >
                             {statusOptions.map(option => (
                                 <option key={option.value} value={option.value}>
@@ -354,18 +350,18 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                         </select>
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Assigned To
                             {readOnlyProject && (
-                                <span className="label-note"> (Project Members Only)</span>
+                                <span className="task-label-note"> (Project Members Only)</span>
                             )}
                         </label>
                         <select
                             name="assignedToUserId"
                             value={formData.assignedToUserId}
                             onChange={handleInputChange}
-                            className="form-select"
+                            className="task-form-select"
                         >
                             <option value="">Unassigned</option>
                             {users.map((user) => (
@@ -376,14 +372,14 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                             ))}
                         </select>
                         {users.length === 0 && formData.projectId && (
-                            <p className="no-members-note">
+                            <p className="task-no-members-note">
                                 No members found for this project. Add members to assign tasks.
                             </p>
                         )}
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Estimated Hours
                         </label>
                         <input
@@ -392,13 +388,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                             value={formData.estimatedHours}
                             onChange={handleInputChange}
                             min="0"
-                            className="form-input"
+                            className="task-form-input"
                             placeholder="0"
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">
+                    <div className="task-form-group">
+                        <label className="task-form-label">
                             Due Date
                         </label>
                         <input
@@ -406,13 +402,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                             name="dueDate"
                             value={formData.dueDate}
                             onChange={handleInputChange}
-                            className="form-input"
+                            className="task-form-input"
                         />
                     </div>
                 </div>
 
-                <div className="form-group">
-                    <label className="form-label">
+                <div className="task-form-group">
+                    <label className="task-form-label">
                         Description
                     </label>
                     <textarea
@@ -420,28 +416,37 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, projectId, readOnlyProject, o
                         value={formData.description}
                         onChange={handleInputChange}
                         rows={4}
-                        className="form-textarea"
+                        className="task-form-textarea"
                         placeholder="Enter task description"
                     />
                 </div>
 
-                <div className="form-actions">
+                <div className="task-form-actions">
                     <button
                         type="button"
                         onClick={onCancel}
                         disabled={loading}
-                        className="cancel-button"
+                        className="task-btn task-btn-cancel"
                     >
-                        <FaTimes />
+                        <FaTimes className="task-btn-icon" />
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="submit-button"
+                        className="task-btn task-btn-primary"
                     >
-                        <FaSave />
-                        {loading ? 'Saving...' : (task ? 'Update Task' : 'Create Task')}
+                        {loading ? (
+                            <>
+                                <span className="task-btn-spinner"></span>
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <FaSave className="task-btn-icon" />
+                                {task ? 'Update Task' : 'Create Task'}
+                            </>
+                        )}
                     </button>
                 </div>
             </form>

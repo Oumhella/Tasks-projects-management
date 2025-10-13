@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaEdit, FaEye, FaTrash, FaSearch, FaUsers, FaTasks } from 'react-icons/fa';
 import apiService from "../../services/api";
@@ -21,7 +22,12 @@ interface Project {
     createdAt: string;
     taskIds: number ;
 }
+interface User {
+    id: string;
+    username: string;
+    role: 'admin' | 'project-manager' | 'developer' | 'observator';
 
+}
 const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -29,6 +35,23 @@ const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
     const [error, setError] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [user, setUser] = useState<User>();
+
+
+    const authenticatedUserRole = async () =>{
+
+        setError('');
+        try{
+            const response = await apiService.getUserProfile();
+            setUser(response);
+        }catch (error){
+            console.error("error fetching user profile", error);
+            setError("error fetching user profile");
+        }
+    };
+    useEffect(() => {
+        authenticatedUserRole();
+    }, []);
 
     const filterProjects = useCallback(() => {
         let filtered = projects;
@@ -71,6 +94,43 @@ const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
         fetchProjects();
     }, []);
 
+    // Fetch project statistics (members and tasks) after projects are loaded
+    useEffect(() => {
+        const fetchProjectStats = async () => {
+            if (projects.length === 0) return;
+
+            try {
+                setError('');
+                const projectsWithStats = await Promise.all(
+                    projects.map(async (project) => {
+                        try {
+                            // Fetch project members
+                            const members = await apiService.getProjectMembers(project.id);
+                            // Fetch tasks for this project
+                            const tasks = await apiService.getTasksByProjectId(project.id);
+
+                            return {
+                                ...project,
+                                memberIds: members.map((member: any) => member.id),
+                                taskIds: tasks.length
+                            };
+                        } catch (error) {
+                            console.error(`Error fetching stats for project ${project.id}:`, error);
+                            // Return project as-is if stats fetch fails
+                            return project;
+                        }
+                    })
+                );
+                setProjects(projectsWithStats);
+            } catch (error) {
+                console.error('Error fetching project statistics:', error);
+                setError('Failed to load project statistics. Some counts may be inaccurate.');
+            }
+        };
+
+        fetchProjectStats();
+    }, [projects.length]); // Only run when projects array length changes
+
     const handleDeleteProject = async (projectId: string) => {
         if (window.confirm('Are you sure you want to delete this project?')) {
             try {
@@ -99,6 +159,25 @@ const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
         if (!dateString) return 'No date';
         return new Date(dateString).toLocaleDateString();
     };
+    const hasCreateAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
+
+    const hasUpdateAuthority = () =>{
+        if(user?.role === "project-manager" || user?.role === "developer"){
+            return true;
+        }
+        return false;
+    }
+    const hasDeleteAuthority = () =>{
+        if(user?.role === "project-manager"){
+            return true;
+        }
+        return false;
+    }
 
     if (loading) {
         return (
@@ -161,9 +240,10 @@ const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
                             <p className="project-description">{project.description}</p>
 
                             <div className="project-stats">
-                                <span><FaUsers /> {project.memberIds.length} members</span>
-                                <span><FaTasks /> {project.taskIds}</span>
+                                <span><FaUsers/> {project.memberIds?.length ?? 0} members</span>
+                                <span><FaTasks/> {project.taskIds ?? 0} tasks</span>
                             </div>
+
 
                             <div className="project-dates">
                                 <div>Start: {formatDate(project.startDate)}</div>
@@ -172,14 +252,18 @@ const ProjectList: React.FC<ProjectListProps> = ({ onEdit, onView }) => {
 
                             <div className="project-actions">
                                 <button className="btn view" onClick={() => onView(project)}>
-                                    <FaEye /> View
+                                    <FaEye/> View
                                 </button>
+                                {hasUpdateAuthority() && (
                                 <button className="btn edit" onClick={() => onEdit(project)}>
-                                    <FaEdit /> Edit
+                                    <FaEdit/> Edit
                                 </button>
+                                )}
+                                {hasDeleteAuthority() && (
                                 <button className="btn delete" onClick={() => handleDeleteProject(project.id)}>
-                                    <FaTrash />
+                                    <FaTrash/>
                                 </button>
+                                    )}
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,7 @@
 package com.projectmanager.entity;
 //import com.projectmanager.listener.task.TaskActivityListener;
+import com.fasterxml.jackson.annotation.*;
+import com.projectmanager.listener.task.TaskActivityListener;
 import com.projectmanager.model.task.TaskPriority;
 import com.projectmanager.model.task.TaskStatus;
 import com.projectmanager.model.task.TaskType;
@@ -14,9 +16,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-
-//@EntityListeners(TaskActivityListener.class)
-
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@EntityListeners(TaskActivityListener.class)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "tasks")
 @Setter
@@ -44,6 +46,7 @@ public class Task {
 
     @ManyToOne
     @JoinColumn(name = "project_id")
+    @JsonBackReference
     private Project project;
 
     @ManyToOne
