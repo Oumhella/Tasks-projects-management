@@ -77,6 +77,9 @@
 .section-icon {
   font-size: var(--text-2xl);
   opacity: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Projects Stats Grid */
@@ -150,6 +153,7 @@
 
 .tasks-overview-section .section-icon {
   color: var(--warning);
+  margin-right: var(--space-2);
 }
 
 /* Tasks Stats */

@@ -27,8 +27,9 @@
 }
 
 .brand-logo {
-    width: 102px;
-    height: 102px;
+    /*padding-left: ;*/
+    width: 162px;
+    height: 162px;
     border-radius: var(--radius-lg);
     object-fit: contain;
     /*border: 2px solid rgba(255, 255, 255, 0.3);*/

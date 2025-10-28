@@ -143,10 +143,10 @@ const TopBar: React.FC = () => {
                         e.currentTarget.parentNode?.appendChild(fallback);
                     }}
                 />
-                <div className="brand-info">
-                    <h1 className="brand-title">PROJECT-MANGER</h1>
-                    {/*<span className="brand-subtitle">Project Management</span>*/}
-                </div>
+                {/*<div className="brand-info">*/}
+                {/*    <h1 className="brand-title">PROJECT-MANGER</h1>*/}
+                {/*    /!*<span className="brand-subtitle">Project Management</span>*!/*/}
+                {/*</div>*/}
             </div>
 
             {/* Main Navigation */}

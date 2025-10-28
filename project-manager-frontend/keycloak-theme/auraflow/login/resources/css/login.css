@@ -101,11 +101,14 @@ body.login-pf {
 .login-pf-header::before {
   content: '';
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 180px;
+  height: 94px;
   margin: 0 auto var(--space-6);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: var(--radius-xl);
+  background-image: url('../img/AURAFLOW.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
 
@@ -324,7 +327,7 @@ body.login-pf {
   }
 
   .login-pf-header::before {
-    width: 56px;
+    width: 100px;
     height: 56px;
   }
 }
@@ -336,6 +339,11 @@ body.login-pf {
 
   .login-pf-header {
     margin-bottom: var(--space-6);
+  }
+
+  .login-pf-header::before {
+    width: 80px;
+    height: 48px;
   }
 }
 

@@ -7,7 +7,7 @@ import {ReactKeycloakProvider} from "@react-keycloak/web";
 import {initOptions, keycloak} from "./config/Keycloak";
 import { registerLicense } from '@syncfusion/ej2-base';
 
-registerLicense(process.env.REACT_APP_SYNCFUSION_LICENSE || '');
+registerLicense('Ngo9BigBOggjHTQxAR8/V1JEaF5cXmRCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXdceHRcQmFcUkVzWUZWYEk=');
 
 
 
