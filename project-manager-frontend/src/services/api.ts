@@ -14,7 +14,7 @@ class ApiService {
     await keycloak.updateToken(30);
     const token = keycloak.token;
     if (!token) throw new Error("No valid token available");
-
+console.log(`Token: ${token}`);
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
@@ -372,6 +372,35 @@ class ApiService {
     });
   }
 
+
+  // Chat endpoints
+  async getChatSessions(): Promise<any[]> {
+    return this.request<any[]>('/chat/sessions');
+  }
+
+  async getChatSession(id: string): Promise<any> {
+    return this.request<any>(`/chat/sessions/${id}`);
+  }
+
+  async createChatSession(session: { sessionName: string }): Promise<any> {
+    return this.request<any>('/chat/sessions', {
+      method: 'POST',
+      body: JSON.stringify(session),
+    });
+  }
+
+  async sendChatMessage(message: { message: string; sessionId?: string }): Promise<any> {
+    return this.request<any>('/chat/messages', {
+      method: 'POST',
+      body: JSON.stringify(message),
+    });
+  }
+
+  async deleteChatSession(id: string): Promise<void> {
+    return this.request<void>(`/chat/sessions/${id}`, {
+      method: 'DELETE',
+    });
+  }
 
   async getProjectPulse(project: any): Promise<ProjectPulseResponse> {
     const prompt = `Based on the following project data, provide a "Project Pulse" analysis. This analysis should be a JSON object with three fields: 

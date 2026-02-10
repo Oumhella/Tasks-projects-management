@@ -86,6 +86,7 @@ import "./TopBar.css";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import apiService from "../../services/api";
 import LogoutButton from "../users/LogoutButton";
+import {FaMessage} from "react-icons/fa6";
 
 interface User {
     firstName: string;
@@ -174,6 +175,13 @@ const TopBar: React.FC = () => {
                 >
                     <FaTasks />
                     <span>Tasks</span>
+                </NavLink>
+                <NavLink
+                    to="/chat"
+                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                >
+                    <FaMessage />
+                    <span>chat</span>
                 </NavLink>
             </nav>
 

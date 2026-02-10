@@ -1,40 +1,40 @@
 /* Modern CSS Reset & Design System */
 @import url('./styles/keycloak-override.css');
 :root {
-  /* Colors */
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #3b82f6;
-  --secondary: #8b5cf6;
-  --secondary-dark: #7c3aed;
-  --secondary-light: #a78bfa;
+  /* Colors - Matching MUI Theme */
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
+  --secondary: #ec4899;
+  --secondary-dark: #db2777;
+  --secondary-light: #f472b6;
   --success: #10b981;
   --success-dark: #059669;
   --warning: #f59e0b;
   --warning-dark: #d97706;
   --danger: #ef4444;
   --danger-dark: #dc2626;
-  --info: #06b6d4;
+  --info: #0ea5e9;
 
   /* Neutral colors */
   --white: #ffffff;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
 
   /* Semantic colors */
   --bg-primary: var(--white);
   --bg-secondary: var(--gray-50);
   --bg-tertiary: var(--gray-100);
   --text-primary: var(--gray-900);
-  --text-secondary: var(--gray-600);
+  --text-secondary: var(--gray-500);
   --text-muted: var(--gray-400);
   --border-primary: var(--gray-200);
   --border-focus: var(--primary);
@@ -237,27 +237,7 @@ html, body {
   }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  background: transparent;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  border-radius: var(--radius-full);
-  transition: all var(--transition);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
-  transform: scale(1.1);
-}
+/* Scrollbar styles removed - handled by MUI CssBaseline */
 
 /* Base Styles */
 h1, h2, h3, h4, h5, h6 {

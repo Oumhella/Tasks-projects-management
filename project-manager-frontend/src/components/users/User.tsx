@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaSave, FaTimes, FaUser, FaEnvelope, FaKey, FaUserTag } from 'react-icons/fa';
-import './User.css';
+import './user.css';
 import apiService from "../../services/api";
 
 interface UserProps {

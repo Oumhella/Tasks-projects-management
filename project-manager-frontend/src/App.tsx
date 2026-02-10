@@ -11,6 +11,7 @@ import TopBar from "./components/sidebar/TopBar";
 import Notifications from "./components/users/Notifications";
 import Activities from './components/users/Activities';
 import Profile from "./components/users/Profile";
+import ChatInterface from "./components/chat/ChatInterface";
 
 // TODO: Keycloak integration will be added here
 // import { ReactKeycloakProvider } from '@react-keycloak/web';
@@ -61,6 +62,7 @@ const App: React.FC = () => {
                     <Route path="/tasks/:id" element={<TasksPage />} />
                     <Route path="/activities" element={<Activities />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/chat" element={<ChatInterface />} />
                     {/* Catch-all route - redirect unknown paths to dashboard */}
                     <Route path="*" element={<Dashboard />} />
                 </Routes>

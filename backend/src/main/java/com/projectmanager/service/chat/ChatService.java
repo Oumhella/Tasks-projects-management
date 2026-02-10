@@ -126,7 +126,6 @@ public class ChatService {
         // Load conversation history for context (Simple Memory)
         List<ChatMessage> history = chatMessageRepository.findMessagesBySessionId(session.getId());
         
-        // Build chat history for Gemini API
         List<Map<String, Object>> chatHistory = new ArrayList<>();
         for (ChatMessage msg : history) {
             String role = msg.getRole() == ChatMessage.MessageRole.USER ? "user" : "model";
@@ -148,7 +147,6 @@ public class ChatService {
             "parts", List.of(Map.of("text", systemContext))
         ));
 
-        // Call Gemini API
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(GEMINI_API_URL + geminiApiKey))
                 .header("Content-Type", "application/json")

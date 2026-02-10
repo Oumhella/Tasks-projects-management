@@ -118,7 +118,8 @@ import {
     FaCalendarAlt,
     FaComments,
     FaBookmark,
-    FaBell
+    FaBell,
+    FaRobot
 } from "react-icons/fa";
 import { NavLink, useLocation } from "react-router-dom";
 import React, { useState, useEffect } from "react";
@@ -179,6 +180,12 @@ const Sidebar: React.FC = () => {
             icon: FaComments,
             badge: 2,
             description: "Team communication"
+        },
+        {
+            to: "/chat",
+            label: "AI Assistant",
+            icon: FaRobot,
+            description: "Chat with AI"
         },
     ];
 

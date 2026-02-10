@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FaEdit, FaTrash, FaSearch, FaUser } from 'react-icons/fa';
 import apiService from '../../services/api';
-import './UserList.css';
+import './userList.css';
 
 interface User {
   id: string;
