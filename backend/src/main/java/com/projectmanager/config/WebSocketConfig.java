@@ -31,11 +31,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") // More permissive for development
                 .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder))
+                .setHandshakeHandler(new CustomHandshakeHandler())
                 .withSockJS();
 
         // Also add without SockJS for native WebSocket support
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder));
+                .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder))
+                .setHandshakeHandler(new CustomHandshakeHandler());
     }
 }

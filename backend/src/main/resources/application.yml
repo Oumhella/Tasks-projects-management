@@ -40,4 +40,4 @@ minio:
   bucketName: project-manager-attachments
 
 gemini:
-  api-key: ${GEMINI_API_KEY}
+  api-key: ${GEMINfronI_API_KEY}

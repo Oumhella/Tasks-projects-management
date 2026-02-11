@@ -111,7 +111,8 @@ const ChatInterface: React.FC = () => {
         // Principal.getName() returns the Keycloak ID (subject)
         const keycloakId = keycloak.tokenParsed?.sub;
         if (keycloakId) {
-          client.subscribe(`/user/${keycloakId}/queue/chat/messages`, (message: IMessage) => {
+          // Standard Spring User Destination subscription
+          client.subscribe('/user/queue/chat/messages', (message: IMessage) => {
             const response: ChatMessage = JSON.parse(message.body);
             handleIncomingMessage(response);
           });
