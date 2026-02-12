@@ -1,92 +1,39 @@
-// import { IconType } from "react-icons";
-// import { FaSearch, FaBell, FaQuestionCircle, FaPlus } from "react-icons/fa";
-// import React, {useEffect, useState} from "react";
-// import "./TopBar.css";
-// import { Link } from "react-router-dom";
-// // import User from "../users/User";
-// import apiService from "../../services/api";
-//
-// interface User {
-//     // name: string;
-//     // email: string;
-//     // password: string;
-//     // confirmPassword: string;
-//     firstName: string;
-//     lastName: string;
-//     // role: string;
-// }
-// const TopBar: React.FC = () => {
-//     const [user,setUser] = useState<User | null>(null);
-//     const [loading, setLoading] = useState(false);
-//     const [error, setError] = useState('');
-//
-//     const getUserName = async ()=>{
-//         setLoading(true);
-//         setError('');
-//         try {
-//             const response = await apiService.getUserProfile();
-//             setUser(response);
-//         }catch (error){
-//             console.error("error fetching user", error);
-//             setError("error fetching user");
-//         }finally {
-//             setLoading(false);
-//         }
-//
-//     };
-//     useEffect(() => {
-//         getUserName();
-//     },[]);
-//
-//     return (
-//         <div className="topbar">
-//             {/* Logo */}
-//             <div className="logo">
-//                 <img src="AURAFLOW.png" alt="logo" />
-//             </div>
-//
-//             {/* Search Bar */}
-//             <div className="search-container">
-//                 <FaSearch className="search-icon" />
-//                 <input
-//                     type="text"
-//                     className="search-input"
-//                     placeholder="Search projects, tasks, or users..."
-//                 />
-//             </div>
-//
-//             {/* Top Bar Actions */}
-//             <div className="topbar-actions">
-//                 <Link to="/notifications" className="action-btn">
-//                     <FaBell />
-//                     <span className="notification-badge">3</span>
-//                 </Link>
-//                 <Link to="/profile" className="user-menu">
-//                     <div className="user-avatar"></div>
-//                     <span>{user?.firstName} {user?.lastName}</span>
-//                 </Link>
-//             </div>
-//         </div>
-//     );
-// };
-//
-// export default TopBar;
-import { 
-    FaBell, 
-    FaUserCircle, 
-    FaChevronDown, 
-    FaCog, 
-    FaSignOutAlt,
-    FaTachometerAlt,
-    FaProjectDiagram,
-    FaTasks
-} from "react-icons/fa";
 import React, { useEffect, useState } from "react";
-import "./TopBar.css";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import {
+    AppBar,
+    Toolbar,
+    IconButton,
+    InputBase,
+    Badge,
+    MenuItem,
+    Menu,
+    Avatar,
+    Box,
+    Typography,
+    Button,
+    useTheme,
+    alpha,
+    Stack,
+    Tooltip
+} from "@mui/material";
+import {
+    Search as SearchIcon,
+    Notifications as NotificationsIcon,
+    AccountCircle,
+    MoreVert as MoreIcon,
+    Dashboard as DashboardIcon,
+    Assignment as ProjectIcon,
+    Task as TaskIcon,
+    Chat as ChatIcon,
+    Add as AddIcon,
+    Logout as LogoutIcon,
+    Settings as SettingsIcon,
+    Person as PersonIcon,
+    Menu as MenuIcon
+} from "@mui/icons-material";
 import apiService from "../../services/api";
-import LogoutButton from "../users/LogoutButton";
-import {FaMessage} from "react-icons/fa6";
+import { useKeycloak } from "@react-keycloak/web";
 
 interface User {
     firstName: string;
@@ -97,151 +44,299 @@ interface User {
 
 const TopBar: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+    const theme = useTheme();
+    const { keycloak } = useKeycloak();
+
     const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [showUserMenu, setShowUserMenu] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState<null | HTMLElement>(null);
+
+    const isMenuOpen = Boolean(anchorEl);
+    const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
     // Fetch logged user
     const getUserProfile = async () => {
         try {
-            setLoading(true);
             const response = await apiService.getUserProfile();
             if (response) {
                 setUser(response);
             }
         } catch (error) {
-            // Silently handle error - user might not be logged in yet
             console.warn("User profile not available:", error);
             setUser(null);
-        } finally {
-            setLoading(false);
         }
     };
 
     useEffect(() => {
-        getUserProfile();
-    }, []);
+        if (keycloak.authenticated) {
+            getUserProfile();
+        }
+    }, [keycloak.authenticated]);
+
+    const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMobileMenuClose = () => {
+        setMobileMoreAnchorEl(null);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+        handleMobileMenuClose();
+    };
+
+    const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setMobileMoreAnchorEl(event.currentTarget);
+    };
+
+    const handleLogout = () => {
+        handleMenuClose();
+        keycloak.logout();
+    };
 
     const getInitials = (firstName?: string, lastName?: string) => {
         if (!firstName && !lastName) return "U";
         return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
     };
 
+    const menuId = 'primary-search-account-menu';
+    const renderMenu = (
+        <Menu
+            anchorEl={anchorEl}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+            }}
+            id={menuId}
+            keepMounted
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            open={isMenuOpen}
+            onClose={handleMenuClose}
+            PaperProps={{
+                elevation: 4,
+                sx: { borderRadius: 2, minWidth: 200, mt: 1.5 }
+            }}
+        >
+            <Box sx={{ px: 2, py: 1.5 }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                    {user ? `${user.firstName} ${user.lastName}` : 'Guest'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
+                    {user?.email || user?.role || 'Member'}
+                </Typography>
+            </Box>
+            <Box sx={{ borderTop: `1px solid ${theme.palette.divider}`, my: 1 }} />
+            <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+                <PersonIcon sx={{ mr: 2, fontSize: 20, color: 'text.secondary' }} /> Profile
+            </MenuItem>
+            <MenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }}>
+                <SettingsIcon sx={{ mr: 2, fontSize: 20, color: 'text.secondary' }} /> Settings
+            </MenuItem>
+            <Box sx={{ borderTop: `1px solid ${theme.palette.divider}`, my: 1 }} />
+            <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                <LogoutIcon sx={{ mr: 2, fontSize: 20 }} /> Logout
+            </MenuItem>
+        </Menu>
+    );
+
+    const mobileMenuId = 'primary-search-account-menu-mobile';
+    const renderMobileMenu = (
+        <Menu
+            anchorEl={mobileMoreAnchorEl}
+            anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            id={mobileMenuId}
+            keepMounted
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            open={isMobileMenuOpen}
+            onClose={handleMobileMenuClose}
+        >
+            <MenuItem>
+                <IconButton size="large" aria-label="show 4 new mails" color="inherit">
+                    <Badge badgeContent={4} color="error">
+                        <ChatIcon />
+                    </Badge>
+                </IconButton>
+                <p>Messages</p>
+            </MenuItem>
+            <MenuItem>
+                <IconButton
+                    size="large"
+                    aria-label="show 17 new notifications"
+                    color="inherit"
+                >
+                    <Badge badgeContent={17} color="error">
+                        <NotificationsIcon />
+                    </Badge>
+                </IconButton>
+                <p>Notifications</p>
+            </MenuItem>
+            <MenuItem onClick={handleProfileMenuOpen}>
+                <IconButton
+                    size="large"
+                    aria-label="account of current user"
+                    aria-controls="primary-search-account-menu"
+                    aria-haspopup="true"
+                    color="inherit"
+                >
+                    <AccountCircle />
+                </IconButton>
+                <p>Profile</p>
+            </MenuItem>
+        </Menu>
+    );
+
+    const navItems = [
+        { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+        { label: 'Projects', icon: <ProjectIcon />, path: '/projects' },
+        { label: 'Tasks', icon: <TaskIcon />, path: '/tasks' },
+        { label: 'Chat', icon: <ChatIcon />, path: '/chat' },
+    ];
+
     return (
-        <div className="topbar">
-            {/* Logo and Brand */}
-            <div className="topbar-brand">
-                <img
-                    src="/AURAFLOW.png"
-                    alt="AuraFlow"
-                    className="brand-logo"
-                    onError={(e) => {
+        <Box sx={{ flexGrow: 1 }}>
+            <AppBar
+                position="fixed"
+                color="inherit"
+                sx={{
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    backdropFilter: 'blur(20px)',
+                    backgroundColor: alpha(theme.palette.background.paper, 0.9),
+                    borderBottom: `1px solid ${theme.palette.divider}`
+                }}
+            >
+                <Toolbar>
+                    {/* Logo Area */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mr: 4 }}>
+                        <Typography
+                            variant="h6"
+                            noWrap
+                            component={Link}
+                            to="/"
+                            sx={{
+                                mr: 2,
+                                display: { xs: 'none', md: 'flex' },
+                                fontWeight: 800,
+                                letterSpacing: '-0.02em',
+                                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                textDecoration: 'none',
+                                fontSize: '1.5rem'
+                            }}
+                        >
+                            AuraFlow
+                        </Typography>
+                    </Box>
 
-                        e.currentTarget.style.display = 'none';
-                        const fallback = document.createElement('div');
-                        fallback.className = 'brand-logo-fallback';
-                        fallback.innerHTML = 'AF';
-                        e.currentTarget.parentNode?.appendChild(fallback);
-                    }}
-                />
-                {/*<div className="brand-info">*/}
-                {/*    <h1 className="brand-title">PROJECT-MANGER</h1>*/}
-                {/*    /!*<span className="brand-subtitle">Project Management</span>*!/*/}
-                {/*</div>*/}
-            </div>
+                    {/* Navigation Links */}
+                    <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', md: 'flex' }, flexGrow: 1 }}>
+                        {navItems.map((item) => {
+                            const isActive = location.pathname.startsWith(item.path);
+                            return (
+                                <Button
+                                    key={item.label}
+                                    component={NavLink}
+                                    to={item.path}
+                                    startIcon={item.icon}
+                                    sx={{
+                                        color: isActive ? 'primary.main' : 'text.secondary',
+                                        backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                                        fontWeight: isActive ? 600 : 500,
+                                        borderRadius: 2,
+                                        px: 2,
+                                        '&:hover': {
+                                            backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.text.primary, 0.04),
+                                            transform: 'translateY(-1px)'
+                                        }
+                                    }}
+                                >
+                                    {item.label}
+                                </Button>
+                            );
+                        })}
+                    </Stack>
 
-            {/* Main Navigation */}
-            <nav className="topbar-nav">
-                <NavLink 
-                    to="/dashboard" 
-                    className={() => {
-                        const isDashboardActive = location.pathname === '/dashboard' || location.pathname === '/';
-                        return `nav-link ${isDashboardActive ? 'active' : ''}`;
-                    }}
-                >
-                    <FaTachometerAlt />
-                    <span>Dashboard</span>
-                </NavLink>
-                <NavLink 
-                    to="/projects" 
-                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                >
-                    <FaProjectDiagram />
-                    <span>Projects</span>
-                </NavLink>
-                <NavLink 
-                    to="/tasks" 
-                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                >
-                    <FaTasks />
-                    <span>Tasks</span>
-                </NavLink>
-                <NavLink
-                    to="/chat"
-                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                >
-                    <FaMessage />
-                    <span>chat</span>
-                </NavLink>
-            </nav>
+                    <Box sx={{ flexGrow: 1 }} />
 
-            {/* Right Actions */}
-            <div className="topbar-actions">
-                {/* Quick Actions */}
-                <div className="quick-actions">
-                    <Link to="/projects/new" className="quick-action-btn primary">
-                        + New Project
-                    </Link>
-                    <Link to="/tasks/new" className="quick-action-btn secondary">
-                        + Task
-                    </Link>
-                </div>
+                    {/* Quick Actions & Profile */}
+                    <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate('/projects/create')}
+                            sx={{ mr: 2, borderRadius: 2 }}
+                        >
+                            New Project
+                        </Button>
 
-                {/* Notifications */}
-                <div className="notification-container">
-                    <Link to="/activities" className="notification-btn">
-                        <FaBell />
-                        <span className="notification-badge">!</span>
-                    </Link>
-                </div>
+                        <Tooltip title="Notifications">
+                            <IconButton 
+                                size="large" 
+                                aria-label="show 17 new notifications" 
+                                color="inherit"
+                                onClick={() => navigate('/activities')}
+                            >
+                                <Badge badgeContent={3} color="error">
+                                    <NotificationsIcon />
+                                </Badge>
+                            </IconButton>
+                        </Tooltip>
 
-                {/* User Menu */}
-                <div className="user-menu-container">
-                    <button
-                        className="user-menu-trigger"
-                        onClick={() => setShowUserMenu(!showUserMenu)}
-                    >
-                        <div className="user-avatar">
-                            {user ? getInitials(user.firstName, user.lastName) : <FaUserCircle />}
-                        </div>
-                        <div className="user-info">
-                            <span className="user-name">
-                                {loading ? "Loading..." :
-                                    user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User" :
-                                        "Guest"}
-                            </span>
-                            <span className="user-role">{user?.role || "Member"}</span>
-                        </div>
-                        <FaChevronDown className={`dropdown-arrow ${showUserMenu ? 'open' : ''}`} />
-                    </button>
+                        <Tooltip title="Account settings">
+                            <IconButton
+                                size="large"
+                                edge="end"
+                                aria-label="account of current user"
+                                aria-controls={menuId}
+                                aria-haspopup="true"
+                                onClick={handleProfileMenuOpen}
+                                color="inherit"
+                            >
+                                <Avatar
+                                    sx={{
+                                        width: 35,
+                                        height: 35,
+                                        bgcolor: theme.palette.primary.main,
+                                        fontSize: '0.9rem',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    {user ? getInitials(user.firstName, user.lastName) : <PersonIcon />}
+                                </Avatar>
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
 
-                    {showUserMenu && (
-                        <div className="user-dropdown">
-                            <Link to="/profile" className="dropdown-item">
-                                <FaUserCircle /> Profile
-                            </Link>
-                            <Link to="/settings" className="dropdown-item">
-                                <FaCog /> Settings
-                            </Link>
-                            <div className="dropdown-divider"></div>
-                            <LogoutButton>
-                                <FaSignOutAlt /> Logout
-                            </LogoutButton>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
+                    <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+                        <IconButton
+                            size="large"
+                            aria-label="show more"
+                            aria-controls={mobileMenuId}
+                            aria-haspopup="true"
+                            onClick={handleMobileMenuOpen}
+                            color="inherit"
+                        >
+                            <MoreIcon />
+                        </IconButton>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+            {renderMobileMenu}
+            {renderMenu}
+            <Toolbar /> {/* Spacer for fixed AppBar */}
+        </Box>
     );
 };
 

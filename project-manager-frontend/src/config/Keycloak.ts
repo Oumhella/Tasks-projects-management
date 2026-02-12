@@ -9,11 +9,9 @@ const keycloak = new Keycloak({
 });
 
 const initOptions = {
-    onLoad: "login-required",
-    redirectUri: "http://localhost:3000/",
+    onLoad: "check-sso",
+    silentCheckSsoRedirectUri: window.location.origin + "/silent-check-sso.html",
     checkLoginIframe: false,
-    // Add theme configuration if using custom theme
-    // theme: "auraflow"
 };
 
 

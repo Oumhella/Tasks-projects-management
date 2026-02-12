@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaPlus, FaEdit } from 'react-icons/fa';
+import {
+    Container,
+    Typography,
+    Button,
+    Box,
+    CircularProgress,
+    Paper,
+    Alert
+} from '@mui/material';
+import { Add as AddIcon, ArrowBack as ArrowBackIcon, Edit as EditIcon } from '@mui/icons-material';
 import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
-import './TasksPage.css';
 import apiService from "../../services/api";
 
 interface User {
     id: string;
     username: string;
     role: 'admin' | 'project-manager' | 'developer' | 'observator';
-
 }
+
 const TasksPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -20,18 +28,19 @@ const TasksPage: React.FC = () => {
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [user, setUser] = useState<User>();
     const [error, setError] = useState<String>('');
+    const [loading, setLoading] = useState(false);
 
-    const authenticatedUserRole = async () =>{
-
+    const authenticatedUserRole = async () => {
         setError('');
-        try{
+        try {
             const response = await apiService.getUserProfile();
             setUser(response);
-        }catch (error){
+        } catch (error) {
             console.error("error fetching user profile", error);
             setError("error fetching user profile");
         }
     };
+
     useEffect(() => {
         authenticatedUserRole();
     }, []);
@@ -50,23 +59,12 @@ const TasksPage: React.FC = () => {
         }
     }, [id]);
 
-    const hasCreateAuthority = () =>{
-        if(user?.role === "project-manager"){
-            return true;
-        }
-        return false;
+    const hasCreateAuthority = () => {
+        return user?.role === "project-manager";
     }
-    const hasUpdateAuthority = () =>{
-        if(user?.role === "project-manager" || user?.role === "developer"){
-            return true;
-        }
-        return false;
-    }
-    const hasDeleteAuthority = () =>{
-        if(user?.role === "project-manager"){
-            return true;
-        }
-        return false;
+
+    const hasUpdateAuthority = () => {
+        return user?.role === "project-manager" || user?.role === "developer";
     }
 
     const handleCreateTask = () => {
@@ -93,97 +91,116 @@ const TasksPage: React.FC = () => {
     };
 
     const renderContent = () => {
+        if (loading) {
+            return (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress />
+                </Box>
+            );
+        }
+
         switch (view) {
             case 'create':
                 return (
-                    <div className="tasks-page-container">
-                        <div className="page-header">
-                            <h1 className="page-title">Create New Task</h1>
-                            <button
+                    <Container maxWidth="lg">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h4" component="h1" fontWeight="bold">Create New Task</Typography>
+                            <Button
+                                startIcon={<ArrowBackIcon />}
                                 onClick={handleBackToList}
-                                className="back-btn"
+                                variant="outlined"
                             >
                                 Back to Tasks
-                            </button>
-                        </div>
-                        <TaskForm onSave={handleBackToList} onCancel={handleBackToList} />
-                    </div>
+                            </Button>
+                        </Box>
+                        <Paper sx={{ p: 4, borderRadius: 2 }}>
+                            <TaskForm onSave={handleBackToList} onCancel={handleBackToList} />
+                        </Paper>
+                    </Container>
                 );
             case 'edit':
                 return (
-                    <div className="tasks-page-container">
-                        <div className="page-header">
-                            <h1 className="page-title">Edit Task</h1>
-                            <button
+                    <Container maxWidth="lg">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h4" component="h1" fontWeight="bold">Edit Task</Typography>
+                            <Button
+                                startIcon={<ArrowBackIcon />}
                                 onClick={handleBackToList}
-                                className="back-btn"
+                                variant="outlined"
                             >
                                 Back to Tasks
-                            </button>
-                        </div>
-                        <TaskForm 
-                            task={selectedTask} 
-                            onSave={handleBackToList} 
-                            onCancel={handleBackToList} 
-                        />
-                    </div>
+                            </Button>
+                        </Box>
+                        <Paper sx={{ p: 4, borderRadius: 2 }}>
+                            <TaskForm
+                                task={selectedTask}
+                                onSave={handleBackToList}
+                                onCancel={handleBackToList}
+                            />
+                        </Paper>
+                    </Container>
                 );
             case 'detail':
                 return (
-                    <div className="tasks-page-container">
-                        <div className="page-header">
-                            <h1 className="page-title">Task Details</h1>
-                            <div className="action-buttons">
+                    <Container maxWidth="xl">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h4" component="h1" fontWeight="bold">Task Details</Typography>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
                                 {hasUpdateAuthority() && (
-                                <button
-                                    onClick={() => handleEditTask(selectedTask)}
-                                    className="edit-btn"
-                                >
-                                    <FaEdit />
-                                    Edit
-                                </button>
-                                    )}
-                                <button
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<EditIcon />}
+                                        onClick={() => handleEditTask(selectedTask)}
+                                    >
+                                        Edit
+                                    </Button>
+                                )}
+                                <Button
+                                    startIcon={<ArrowBackIcon />}
                                     onClick={handleBackToList}
-                                    className="back-btn"
+                                    variant="outlined"
                                 >
                                     Back to Tasks
-                                </button>
-                            </div>
-                        </div>
+                                </Button>
+                            </Box>
+                        </Box>
                         <TaskDetail task={selectedTask} />
-                    </div>
+                    </Container>
                 );
             default:
                 return (
-                    <div className="tasks-page-container">
-                        <div className="tasks-header">
-                            <h1 className="tasks-title">Tasks</h1>
-                            {hasCreateAuthority() &&(
-                                <button
-                                onClick={handleCreateTask}
-                                className="create-task-btn"
-                            >
-                                <FaPlus />
-                                Create Task
-                            </button>
-                                )}
-                        </div>
+                    <Container maxWidth="xl">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>Tasks</Typography>
+                                <Typography variant="body1" color="text.secondary">Manage and track your tasks</Typography>
+                            </Box>
+                            {hasCreateAuthority() && (
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleCreateTask}
+                                    size="large"
+                                >
+                                    Create Task
+                                </Button>
+                            )}
+                        </Box>
                         <TaskList onEdit={handleEditTask} onView={handleViewTask} />
-                    </div>
+                    </Container>
                 );
         }
     };
 
     return (
-        <div>
+        <Box sx={{ py: 4 }}>
             {error && (
-                <div className="error-message">
-                    {error}
-                </div>
+                <Container maxWidth="xl" sx={{ mb: 3 }}>
+                    <Alert severity="error">{error}</Alert>
+                </Container>
             )}
             {renderContent()}
-        </div>
+        </Box>
     );
 };
 

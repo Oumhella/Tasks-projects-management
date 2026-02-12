@@ -1,73 +1,155 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import './utils/keycloak-styler.js';
 import UserList from "./components/users/UserList";
 import User from "./components/users/User";
 import ProjectsPage from "./components/project/ProjectsPage";
 import TasksPage from "./components/task/TasksPage";
 import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import TopBar from "./components/sidebar/TopBar";
 import Notifications from "./components/users/Notifications";
 import Activities from './components/users/Activities';
 import Profile from "./components/users/Profile";
 import ChatInterface from "./components/chat/ChatInterface";
+import { useKeycloak } from "@react-keycloak/web";
+import { Box, CircularProgress, Typography } from "@mui/material";
 
-// TODO: Keycloak integration will be added here
-// import { ReactKeycloakProvider } from '@react-keycloak/web';
-// import keycloak from './config/Keycloak';
+const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
+    const { keycloak, initialized } = useKeycloak();
+    const location = useLocation();
+
+    if (!initialized) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (!keycloak.authenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    return children;
+};
 
 const App: React.FC = () => {
-    const [authenticated, setAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const { keycloak, initialized } = useKeycloak();
 
-    useEffect(() => {
-        // Check if user has valid token in localStorage
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            // Optionally validate token here
-            setAuthenticated(true);
-        }
-        setLoading(false);
-    }, []);
-
-    if (loading) {
+    if (!initialized) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-100">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <p className="mt-4 text-gray-600">Loading...</p>
-                </div>
-            </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', gap: 2 }}>
+                <CircularProgress />
+                <Typography variant="body1" color="text.secondary">Initializing Application...</Typography>
+            </Box>
         );
     }
 
     return (
-        <div className="app-container">
-            <TopBar />
-            <div className="main-content">
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {keycloak.authenticated && <TopBar />}
+            <Box 
+                component="main" 
+                sx={{ 
+                    flexGrow: 1,
+                    width: '100%',
+                    pt: keycloak.authenticated ? '64px' : 0,
+                    minHeight: '100vh',
+                    bgcolor: 'background.default'
+                }}
+            >
                 <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/users" element={<UserList />} />
-                    <Route path="/users/create" element={<User />} />
-                    <Route path="/users/:id/edit" element={<User />} />
-                    <Route path="/projects" element={<ProjectsPage />} />
-                    <Route path="/projects/create" element={<ProjectsPage />} />
-                    <Route path="/projects/:id" element={<ProjectsPage />} />
-                    <Route path="/projects/:id/edit" element={<ProjectsPage />} />
-                    <Route path="/tasks" element={<TasksPage />} />
-                    <Route path="/tasks/create" element={<TasksPage />} />
-                    <Route path="/tasks/:id/edit" element={<TasksPage />} />
-                    <Route path="/tasks/:id" element={<TasksPage />} />
-                    <Route path="/activities" element={<Activities />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/chat" element={<ChatInterface />} />
-                    {/* Catch-all route - redirect unknown paths to dashboard */}
-                    <Route path="*" element={<Dashboard />} />
+                    <Route path="/login" element={
+                        keycloak.authenticated ? <Navigate to="/" replace /> : <Login />
+                    } />
+
+                    <Route path="/" element={
+                        <PrivateRoute>
+                            <Dashboard />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/dashboard" element={
+                        <PrivateRoute>
+                            <Dashboard />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/users" element={
+                        <PrivateRoute>
+                            <UserList />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/users/create" element={
+                        <PrivateRoute>
+                            <User />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/users/:id/edit" element={
+                        <PrivateRoute>
+                            <User />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/projects" element={
+                        <PrivateRoute>
+                            <ProjectsPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/projects/create" element={
+                        <PrivateRoute>
+                            <ProjectsPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/projects/:id" element={
+                        <PrivateRoute>
+                            <ProjectsPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/projects/:id/edit" element={
+                        <PrivateRoute>
+                            <ProjectsPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/tasks" element={
+                        <PrivateRoute>
+                            <TasksPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/tasks/create" element={
+                        <PrivateRoute>
+                            <TasksPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/tasks/:id/edit" element={
+                        <PrivateRoute>
+                            <TasksPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/tasks/:id" element={
+                        <PrivateRoute>
+                            <TasksPage />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/activities" element={
+                        <PrivateRoute>
+                            <Activities />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/profile" element={
+                        <PrivateRoute>
+                            <Profile />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/chat" element={
+                        <PrivateRoute>
+                            <ChatInterface />
+                        </PrivateRoute>
+                    } />
+                    {/* Catch-all route */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 };
 export default App;

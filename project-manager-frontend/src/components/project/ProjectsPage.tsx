@@ -171,17 +171,25 @@
 //
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaPlus, FaEdit } from 'react-icons/fa';
+import { 
+    Container, 
+    Typography, 
+    Button, 
+    Box, 
+    CircularProgress, 
+    Paper, 
+    Alert 
+} from '@mui/material';
+import { Add as AddIcon, ArrowBack as ArrowBackIcon, Edit as EditIcon } from '@mui/icons-material';
 import ProjectForm from './ProjectForm';
 import ProjectList from './ProjectList';
 import ProjectDetail from './ProjectDetail';
 import apiService from "../../services/api";
-import './ProjectsPage.css';
+
 interface User {
     id: string;
     username: string;
     role: 'admin' | 'project-manager' | 'developer' | 'observator';
-   
 }
 
 const ProjectsPage: React.FC = () => {
@@ -192,11 +200,8 @@ const ProjectsPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<String>('');
     const [user, setUser] = useState<User>();
-    // const [role, setRole] = useState<'admin' | 'project-manager' | 'developer' | 'observator' >('admin');
-
 
     const authenticatedUserRole = async () =>{
-       
         setError('');
         try{
             const response = await apiService.getUserProfile();
@@ -206,10 +211,10 @@ const ProjectsPage: React.FC = () => {
             setError("error fetching user profile");
         }
     };
+    
     useEffect(() => {
         authenticatedUserRole();
     }, []);
-
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -239,25 +244,12 @@ const ProjectsPage: React.FC = () => {
         fetchProjectDetails();
     }, [id, navigate]);
 
-
     const hasCreateAuthority = () =>{
-        if(user?.role === "project-manager"){
-            return true;
-        }
-        return false;
+        return user?.role === "project-manager";
     }
 
     const hasUpdateAuthority = () =>{
-        if(user?.role === "project-manager" || user?.role === "developer"){
-            return true;
-        }
-        return false;
-    }
-    const hasDeleteAuthority = () =>{
-        if(user?.role === "project-manager"){
-            return true;
-        }
-        return false;
+        return user?.role === "project-manager" || user?.role === "developer";
     }
 
     const handleCreateProject = () => {
@@ -283,106 +275,120 @@ const ProjectsPage: React.FC = () => {
         setSelectedProject(null);
     };
 
-
-
     const renderContent = () => {
         if (loading) {
-            return <div className="loading-container">Loading project details...</div>;
+            return (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress />
+                </Box>
+            );
         }
+        
         switch (view) {
             case 'create':
                 return (
-                    <div className="container">
-                        <div className="page-header">
-                            <h1 className="page-title">Create New Project</h1>
-                            <button
+                    <Container maxWidth="lg">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h4" component="h1" fontWeight="bold">Create New Project</Typography>
+                            <Button 
+                                startIcon={<ArrowBackIcon />} 
                                 onClick={handleBackToList}
-                                className="btn btn-outline"
+                                variant="outlined"
                             >
                                 Back to Projects
-                            </button>
-                        </div>
-                        <ProjectForm onSave={handleBackToList} onCancel={handleBackToList} />
-                    </div>
+                            </Button>
+                        </Box>
+                        <Paper sx={{ p: 4, borderRadius: 2 }}>
+                            <ProjectForm onSave={handleBackToList} onCancel={handleBackToList} />
+                        </Paper>
+                    </Container>
                 );
             case 'edit':
                 return (
-                    <div className="container">
-                        <div className="page-header">
-                            <h1 className="page-title">Edit Project</h1>
-                            <button
+                    <Container maxWidth="lg">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h4" component="h1" fontWeight="bold">Edit Project</Typography>
+                            <Button 
+                                startIcon={<ArrowBackIcon />} 
                                 onClick={handleBackToList}
-                                className="btn btn-outline"
+                                variant="outlined"
                             >
                                 Back to Projects
-                            </button>
-                        </div>
-                        <ProjectForm
-                            project={selectedProject}
-                            onSave={handleBackToList}
-                            onCancel={handleBackToList}
-                            isEdit={true}
-                        />
-                    </div>
+                            </Button>
+                        </Box>
+                        <Paper sx={{ p: 4, borderRadius: 2 }}>
+                            <ProjectForm
+                                project={selectedProject}
+                                onSave={handleBackToList}
+                                onCancel={handleBackToList}
+                                isEdit={true}
+                            />
+                        </Paper>
+                    </Container>
                 );
             case 'detail':
                 return selectedProject ? (
-                    <div className="container">
-                        <div className="page-header">
-                            <h1 className="page-title">Project Details</h1>
-                            <div className="action-buttons">
-                                {hasUpdateAuthority() &&(
-                                <button
-                                    onClick={() => handleEditProject(selectedProject)}
-                                    className="btn btn-primary"
-                                >
-                                    <FaEdit/>
-                                    Edit
-                                </button>
-                                    )}
-                                <button
+                    <Container maxWidth="xl">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h4" component="h1" fontWeight="bold">Project Details</Typography>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                {hasUpdateAuthority() && (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<EditIcon />}
+                                        onClick={() => handleEditProject(selectedProject)}
+                                    >
+                                        Edit
+                                    </Button>
+                                )}
+                                <Button 
+                                    startIcon={<ArrowBackIcon />} 
                                     onClick={handleBackToList}
-                                    className="btn btn-outline"
+                                    variant="outlined"
                                 >
                                     Back to Projects
-                                </button>
-                            </div>
-                        </div>
+                                </Button>
+                            </Box>
+                        </Box>
                         <ProjectDetail project={selectedProject}/>
-                    </div>
+                    </Container>
                 ) : (
-                    <div className="error-message">Project not found.</div>
+                    <Alert severity="error">Project not found.</Alert>
                 );
             default:
                 return (
-                    <div className="container">
-                        <div className="projects-header">
-                            <h1 className="projects-title">Projects</h1>
-                            {hasCreateAuthority() &&(
-                            <button
-                                onClick={handleCreateProject}
-                                className="btn btn-primary"
-                            >
-                                <FaPlus />
-                                Create Project
-                            </button>
+                    <Container maxWidth="xl">
+                        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>Projects</Typography>
+                                <Typography variant="body1" color="text.secondary">Manage and track your projects</Typography>
+                            </Box>
+                            {hasCreateAuthority() && (
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleCreateProject}
+                                    size="large"
+                                >
+                                    Create Project
+                                </Button>
                             )}
-                        </div>
+                        </Box>
                         <ProjectList onEdit={handleEditProject} onView={handleViewProject} />
-                    </div>
+                    </Container>
                 );
         }
     };
 
     return (
-        <div>
+        <Box sx={{ py: 4 }}>
             {error && (
-                <div className="error-message">
-                    {error}
-                </div>
+                <Container maxWidth="xl" sx={{ mb: 3 }}>
+                    <Alert severity="error">{error}</Alert>
+                </Container>
             )}
             {renderContent()}
-        </div>
+        </Box>
     );
 };
 export default ProjectsPage;
