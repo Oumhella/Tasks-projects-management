@@ -10,9 +10,9 @@ import com.projectmanager.entity.Project;
 import com.projectmanager.entity.User;
 import com.projectmanager.mapper.ProjectMapper;
 import com.projectmanager.repository.ProjectRepository;
-import com.projectmanager.repository.UserRepository;
 import com.projectmanager.service.project.ProjectAnalysisService;
 import com.projectmanager.service.project.ProjectService;
+import com.projectmanager.service.user.CurrentUserProvisioningService;
 import com.projectmanager.service.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,27 +36,23 @@ public class ProjectController {
     private final ProjectMapper projectMapper;
     private final ProjectAnalysisService projectAnalysisService;
     private final ProjectRepository projectRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserProvisioningService currentUserProvisioningService;
 
     @Autowired
-    public ProjectController(ProjectService projectService, UserService userService, ProjectMapper projectMapper, ProjectAnalysisService projectAnalysisService, ProjectRepository projectRepository, UserRepository userRepository) {
+    public ProjectController(ProjectService projectService, UserService userService, ProjectMapper projectMapper, ProjectAnalysisService projectAnalysisService, ProjectRepository projectRepository, CurrentUserProvisioningService currentUserProvisioningService) {
         this.projectService = projectService;
         this.userService = userService;
         this.projectMapper = projectMapper;
         this.projectAnalysisService = projectAnalysisService;
         this.projectRepository = projectRepository;
-        this.userRepository = userRepository;
+        this.currentUserProvisioningService = currentUserProvisioningService;
     }
 
     @GetMapping
     public ResponseEntity<List<Project>> getAllProjects(Principal principal) {
-        UUID keycloakId = UUID.fromString(principal.getName());
-        Optional<User> user = userRepository.findByKeycloakId(keycloakId);
-        if (user.isPresent()) {
-            List<Project> projects = projectService.findProjectsByUserId(user.get().getId());
-            return ResponseEntity.ok(projects);
-        }
-        return ResponseEntity.notFound().build();
+        User user = currentUserProvisioningService.getOrCreateCurrentUser(principal);
+        List<Project> projects = projectService.findProjectsByUserId(user.getId());
+        return ResponseEntity.ok(projects);
     }
 
     @GetMapping("/{id}")

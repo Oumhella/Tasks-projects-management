@@ -38,11 +38,20 @@ A comprehensive project and task management application featuring a Spring Boot 
 1. Clone the repository.
 2. Start all services using Docker Compose:
    ```bash
-   docker-compose up -d
+   docker compose up -d --build
    ```
-   *Note: Ensure you have configured your environment variables and that the `docker-compose.yml` services are uncommented as needed for your setup.*
+3. Optional: set runtime secrets from your shell before launch:
+   ```bash
+   export KEYCLOAK_CLIENT_SECRET=your_client_secret
+   export GEMINI_API_KEY=your_gemini_key
+   ```
+   On Windows PowerShell:
+   ```powershell
+   $env:KEYCLOAK_CLIENT_SECRET="your_client_secret"
+   $env:GEMINI_API_KEY="your_gemini_key"
+   ```
 
-3. Access the application:
+4. Access the application:
    - **Frontend**: `http://localhost:3000`
    - **Backend API**: `http://localhost:8081`
    - **Keycloak Console**: `http://localhost:8080`

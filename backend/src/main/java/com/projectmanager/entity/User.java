@@ -13,7 +13,9 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "keycloak_id")
+})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

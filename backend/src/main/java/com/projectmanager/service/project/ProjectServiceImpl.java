@@ -133,6 +133,6 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<Project> findProjectsByUserId(UUID userId) {
-        return projectRepository.findByMember_Id(userId);
+        return projectRepository.findProjectsByUserIdOrCreator(userId);
     }
 }

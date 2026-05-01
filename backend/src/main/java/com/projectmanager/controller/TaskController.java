@@ -6,8 +6,8 @@ import com.projectmanager.entity.Task;
 import com.projectmanager.entity.User;
 import com.projectmanager.mapper.TaskMapper;
 import com.projectmanager.model.task.TaskStatus;
-import com.projectmanager.repository.UserRepository;
 import com.projectmanager.service.project.ProjectService;
+import com.projectmanager.service.user.CurrentUserProvisioningService;
 import com.projectmanager.service.task.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,24 +27,20 @@ public class TaskController {
 
     private final ProjectService projectService;
     private final TaskMapper taskMapper;
-    private final UserRepository userRepository;
+    private final CurrentUserProvisioningService currentUserProvisioningService;
 
     @Autowired
-    public TaskController(TaskService taskService, ProjectService projectService, TaskMapper taskMapper, UserRepository userRepository) {
+    public TaskController(TaskService taskService, ProjectService projectService, TaskMapper taskMapper, CurrentUserProvisioningService currentUserProvisioningService) {
         this.taskService = taskService;
         this.projectService = projectService;
         this.taskMapper = taskMapper;
-        this.userRepository = userRepository;
+        this.currentUserProvisioningService = currentUserProvisioningService;
     }
 
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks(Principal principal) {
-       UUID uuid = UUID.fromString(principal.getName());
-       Optional<User> user = userRepository.findByKeycloakId(uuid);
-       if(user.isEmpty()){
-           return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-       }
-       List<Task> tasks = taskService.getTasksForUser(user.get().getId());
+       User user = currentUserProvisioningService.getOrCreateCurrentUser(principal);
+       List<Task> tasks = taskService.getTasksForUser(user.getId());
         return ResponseEntity.ok(tasks);
     }
 
