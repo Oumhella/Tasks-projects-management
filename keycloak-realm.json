@@ -1,6 +1,16 @@
 {
   "realm": "project-manager",
   "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "USER"
+      },
+      {
+        "name": "ADMIN"
+      }
+    ]
+  },
   "clients": [
     {
       "clientId": "admin-cli",
@@ -10,6 +20,36 @@
       "standardFlowEnabled": true,
       "webOrigins": ["+"],
       "redirectUris": ["+"]
+    },
+    {
+      "clientId": "project_manager_client",
+      "name": "Project Manager Backend",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "changeme",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "project-manager-frontend",
+      "name": "Project Manager Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "baseUrl": "http://localhost:3000",
+      "redirectUris": [
+        "http://localhost:3000",
+        "http://localhost:3000/silent-check-sso.html",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "+"
+      ],
+      "protocol": "openid-connect"
     }
   ],
   "users": [

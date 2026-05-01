@@ -14,6 +14,8 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public UserResponse() {}
+
     public UserResponse(UUID id, String username, String email) {
         this.id = id;
         this.username = username;

@@ -6,7 +6,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/project-manager
+          issuer-uri: ${JWT_EXPECTED_ISSUER:http://localhost:8080/realms/project-manager}
+          jwk-set-uri: ${JWT_JWK_SET_URI:${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8080}/realms/project-manager/protocol/openid-connect/certs}
 
   datasource:
     url: jdbc:postgresql://localhost:5432/projectmanager
@@ -21,7 +22,7 @@ spring:
       write-dates-as-timestamps: false
 
 keycloak:
-  auth-server-url: http://localhost:8080
+  auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8080}
   target-realm: project-manager
   client-id: project_manager_client
   client-secret: ${KEYCLOAK_CLIENT_SECRET}
@@ -40,4 +41,4 @@ minio:
   bucketName: project-manager-attachments
 
 gemini:
-  api-key: ${GEMINfronI_API_KEY}
+  api-key: ${GEMINI_API_KEY}

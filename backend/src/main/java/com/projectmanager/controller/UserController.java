@@ -6,9 +6,9 @@ import com.projectmanager.dto.response.UserResponse;
 import com.projectmanager.entity.Activity;
 import com.projectmanager.entity.User;
 import com.projectmanager.mapper.UserMapper;
-import com.projectmanager.repository.UserRepository;
 import com.projectmanager.service.activity.ActivityService;
 import com.projectmanager.service.activity.NotificationService;
+import com.projectmanager.service.user.CurrentUserProvisioningService;
 import com.projectmanager.service.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,15 +28,15 @@ public class UserController {
     private final UserMapper userMapper;
     private final ActivityService activityService;
     private final NotificationService notificationService;
-    private final UserRepository userRepository;
+    private final CurrentUserProvisioningService currentUserProvisioningService;
 
     public UserController(UserService userService,
-                          UserMapper userMapper, ActivityService activityService, NotificationService notificationService, UserRepository userRepository) {
+                          UserMapper userMapper, ActivityService activityService, NotificationService notificationService, CurrentUserProvisioningService currentUserProvisioningService) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.activityService = activityService;
         this.notificationService = notificationService;
-        this.userRepository = userRepository;
+        this.currentUserProvisioningService = currentUserProvisioningService;
     }
 
     @PostMapping
@@ -61,6 +61,7 @@ public class UserController {
         return ResponseEntity.ok(userResponse);
     }
 
+
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @RequestBody UserUpdateRequest request) {
         UserResponse updatedUser = userService.updateUser(id, request);
@@ -74,24 +75,31 @@ public class UserController {
     }
     @GetMapping("/notifications")
     public ResponseEntity<List<Activity>> getUserNotifications(Principal principal) {
-        UUID id = UUID.fromString(principal.getName());
-        Optional<User> user = userRepository.findByKeycloakId(id);
-        if(!user.isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        List<Activity> notifications = notificationService.getNotificationsforUser(user.get().getId());
+        User user = currentUserProvisioningService.getOrCreateCurrentUser(principal);
+        List<Activity> notifications = notificationService.getNotificationsforUser(user.getId());
         return ResponseEntity.ok(notifications);
     }
-    @GetMapping("/profile")
-    public ResponseEntity<UserResponse> getUserProfile(Principal principal) {
-        UUID id = UUID.fromString(principal.getName());
-        Optional<User> user = userRepository.findByKeycloakId(id);
-        if (user.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        UserResponse userResponse = userMapper.toResponse(user.get());
+//    @GetMapping("/profile")
+//    public ResponseEntity<UserResponse> getUserProfile(Principal principal) {
+//        User user = currentUserProvisioningService.getOrCreateCurrentUser(principal);
+//        UserResponse userResponse = userMapper.toResponse(user);
+//        return ResponseEntity.ok(userResponse);
+//    }
+@GetMapping("/profile")
+public ResponseEntity<UserResponse> getUserProfile(Principal principal) {
+    try {
+        System.out.println("Principal type: " + principal.getClass().getName());
+        System.out.println("Principal name: " + principal.getName());
+        User user = currentUserProvisioningService.getOrCreateCurrentUser(principal);
+        System.out.println("User found/created: " + user.getId());
+        UserResponse userResponse = userMapper.toResponse(user);
         return ResponseEntity.ok(userResponse);
+    } catch (Exception e) {
+        System.err.println("Error in getUserProfile: " + e.getMessage());
+        e.printStackTrace();
+        throw e;
     }
+}
 //    @GetMapping("/me")
 //    public ResponseEntity<UserResponse> getUserMe(Principal principal) {
 //        UUID id = UUID.fromString(principal.getName());

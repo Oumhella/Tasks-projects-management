@@ -3,6 +3,7 @@ package com.projectmanager.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,9 +11,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -30,6 +32,11 @@ import java.util.stream.Collectors;
 @EnableMethodSecurity
 @EnableWebSecurity
 public class SecurityConfig {
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String expectedIssuerUri;
+
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+    private String jwtJwkSetUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -80,18 +87,29 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(
-                "http://localhost:8080/realms/project-manager"
-        );
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwtJwkSetUri).build();
 
-        OAuth2TokenValidator<Jwt> withAudience = new JwtClaimValidator<List<String>>(
-                "aud",
-                aud -> aud.contains("project_manager_client")
-        );
+        OAuth2TokenValidator<Jwt> withAudience = token -> {
+            List<String> audience = token.getAudience();
+            String authorizedParty = token.getClaimAsString("azp");
 
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(
-                "http://localhost:8080/realms/project-manager"
-        );
+            boolean audienceMatch = audience != null && (
+                    audience.contains("project_manager_client") ||
+                    audience.contains("project-manager-frontend")
+            );
+
+            boolean authorizedPartyMatch =
+                    "project_manager_client".equals(authorizedParty) ||
+                    "project-manager-frontend".equals(authorizedParty);
+
+            return (audienceMatch || authorizedPartyMatch)
+                    ? OAuth2TokenValidatorResult.success()
+                    : OAuth2TokenValidatorResult.failure(
+                    new OAuth2Error("invalid_token", "The required audience is missing", null)
+            );
+        };
+
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(expectedIssuerUri);
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience);
         jwtDecoder.setJwtValidator(validator);
